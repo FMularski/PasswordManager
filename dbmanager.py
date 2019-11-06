@@ -35,7 +35,7 @@ class DbManager:
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
 
-    def get_column_values(self, column, table):
+    def get_column_values(self, table, column):
         cursor = self.conn.cursor()
         try:
             cursor.execute(f'SELECT {column} FROM {table}')
