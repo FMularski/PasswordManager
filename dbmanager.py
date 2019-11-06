@@ -14,6 +14,8 @@ class DbManager:
             CREATE TABLE IF NOT EXISTS Users(
             id integer PRIMARY KEY AUTOINCREMENT,
             login text NOT NULL,
+            email text NOT NULL,
+            pin text NOT NULL,
             password text NOT NULL
             );"""
 
@@ -54,7 +56,7 @@ class DbManager:
         try:
             values_question_marks = '?, ' * len(values)  # generates ?, ?, ?, ?, for the query
 
-            insert_query = f'INSERT INTO {table} ({columns}) VALUES({values_question_marks[0:-2]})'
+            insert_query = f'INSERT INTO {table} ({columns}) VALUES({values_question_marks[0:-2]})'  # -2 cuts ', '
             self.conn.execute(insert_query, values)
             self.conn.commit()
 
@@ -64,15 +66,15 @@ class DbManager:
 
         messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
 
-    def get_user_password(self, login):
-        cursor = self.conn.cursor()
-        query = 'SELECT password FROM Users WHERE login = ?'
+    def get_user_field(self, login, field):
+        query = f'SELECT {field} FROM Users WHERE login = ?'
         try:
+            cursor = self.conn.cursor()
             cursor.execute(query, (login,))
-            password = cursor.fetchone()[0]
+            f = cursor.fetchone()[0]
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return
 
-        return password
+        return f
 
