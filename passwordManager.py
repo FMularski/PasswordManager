@@ -2,48 +2,19 @@ import tkinter as tk
 from tkinter import messagebox
 import pyautogui as pag
 import sqlite3
+from dbmanager import DbManager
 
-### DB SETUP ###
-
-try:
-    conn = sqlite3.connect('passmanager.db')
-
-    createTableUsersQuery = """
-    CREATE TABLE IF NOT EXISTS Users(
-    id integer PRIMARY KEY AUTOINCREMENT,
-    login text NOT NULL,
-    password text NOT NULL
-    );"""
-
-    createTableAccountsQuery = """
-        CREATE TABLE IF NOT EXISTS Accounts(
-        id integer PRIMARY KEY,
-        name text NOT NULL,
-        login text NOT NULL,
-        password text NOT NULL,
-        user_id integer NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES Users(id)
-        );"""
-
-    conn.execute(createTableUsersQuery)
-    conn.execute(createTableAccountsQuery)
-except sqlite3.Error as e:
-    messagebox.showerror('Error', e)
+dbm = DbManager('pass_manager.db')
+dbm.setup_db()
 
 
-### METHODS ###
 def register(login, password, password_confirm, entries):
 
     if '' in (login, password, password_confirm):
         messagebox.showerror('Error', 'Please fill all entries.')
         return
 
-    cursor = conn.cursor()
-    cursor.execute('SELECT login FROM Users')
-
-    login_in_db = list()    # making [login1, login2, ...] from [(login1,), (login2,), ...]
-    for log_in_db_list in cursor.fetchall():
-        login_in_db.append(log_in_db_list[0])
+    login_in_db = dbm.get_column_values('login', 'Users')
 
     if login in login_in_db:
         messagebox.showerror('Error', 'Entered login is already used.')
@@ -57,18 +28,10 @@ def register(login, password, password_confirm, entries):
         entries[2].delete(0, 'end')
         return
 
-    try:
-        insert_query = f'INSERT INTO Users (login, password) VALUES(?, ?)'
-        conn.execute(insert_query, (login, password))
-        conn.commit()
+    dbm.insert('Users', 'login, password', (login, password))
 
-        for entry in entries:
-            entry.delete(0, 'end')
-
-        messagebox.showinfo('Success', f'User {login} has been successfully created.')
-
-    except sqlite3.Error as e:
-        messagebox.showerror('Error', e)
+    for entry in entries:
+        entry.delete(0, 'end')
 
 
 ### GUI ###
