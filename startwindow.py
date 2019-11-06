@@ -78,4 +78,25 @@ class StartWindow(Window):
         self.regPasswordConfirmEntry.delete(0, 'end')
 
     def login(self):
+        login = self.logEntry.get()
+        password = self.passwordEntry.get()
+
+        if '' in (login, password):
+            messagebox.showerror('Error', 'Please fill all entries.')
+            self.passwordEntry.delete(0, 'end')
+            return
+
+        log_in_db = self.dbm.get_column_values('Users', 'login')
+
+        if login not in log_in_db:
+            messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
+            self.logEntry.delete(0, 'end')
+            self.passwordEntry.delete(0, 'end')
+            return
+
+        if password != self.dbm.get_user_password(login):
+            messagebox.showerror('Error', 'Entered password is not correct.')
+            self.passwordEntry.delete(0, 'end')
+            return
+
         self.root.destroy()

@@ -52,11 +52,27 @@ class DbManager:
 
     def insert(self, table, columns, values):
         try:
-            insert_query = f'INSERT INTO {table} ({columns}) VALUES(?, ?)'
+            values_question_marks = '?, ' * len(values)  # generates ?, ?, ?, ?, for the query
+
+            insert_query = f'INSERT INTO {table} ({columns}) VALUES({values_question_marks[0:-2]})'
             self.conn.execute(insert_query, values)
             self.conn.commit()
 
-            messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
-
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
+            return
+
+        messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
+
+    def get_user_password(self, login):
+        cursor = self.conn.cursor()
+        query = 'SELECT password FROM Users WHERE login = ?'
+        try:
+            cursor.execute(query, (login,))
+            password = cursor.fetchone()[0]
+        except sqlite3.Error as e:
+            messagebox.showerror('Error', e)
+            return
+
+        return password
+
