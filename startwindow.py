@@ -4,6 +4,7 @@ from tkinter import messagebox
 import re
 from forgetformwindow import ForgetFormWindow
 
+
 class StartWindow(Window):
     def __init__(self, db_manager, mail_manager):
         super().__init__(db_manager, mail_manager)

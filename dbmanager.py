@@ -22,8 +22,9 @@ class DbManager:
         create_table_accounts_query = """
                 CREATE TABLE IF NOT EXISTS Accounts(
                 id integer PRIMARY KEY AUTOINCREMENT,
-                name text NOT NULL,
-                login text NOT NULL,
+                title text NOT NULL,
+                login text,
+                associated_email text,
                 password text NOT NULL,
                 user_id integer NOT NULL,
                 FOREIGN KEY (user_id) REFERENCES Users(id)
@@ -71,10 +72,10 @@ class DbManager:
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, (login,))
-            f = cursor.fetchone()[0]
+            return cursor.fetchone()[0]
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return
 
-        return f
+
 

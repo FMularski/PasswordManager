@@ -1,5 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
+import pyautogui as pag
 
 
 class ForgetFormWindow(tk.Toplevel):
@@ -9,8 +10,9 @@ class ForgetFormWindow(tk.Toplevel):
         self.dbm = dbm
         self.mailm = mailm
         self.btn = btn
+        self.width, self.height = pag.size()
 
-        self.canvas = tk.Canvas(self, width=400, height=200, bg=bg_color)
+        self.canvas = tk.Canvas(self, width=self.width / 5, height=self.height / 5, bg=bg_color)
         self.forgetPassLabel = tk.Label(self, text='Forgot password?', font='12', bg=bg_color)
         self.forgetLoginLabel = tk.Label(self, text='Login:', bg=bg_color)
         self.forgetLoginEntry = tk.Entry(self, width=25)
@@ -25,11 +27,11 @@ class ForgetFormWindow(tk.Toplevel):
     def place_widgets(self):
         self.canvas.pack()
         self.forgetPassLabel.place(relx=0, rely=0)
-        self.forgetLoginLabel.place(relx=0.3, rely=0.2)
-        self.forgetLoginEntry.place(relx=0.3, rely=0.3)
-        self.forgetEmailLabel.place(relx=0.3, rely=0.4)
-        self.forgetEmailEntry.place(relx=0.3, rely=0.5)
-        self.remindPasswordBtn.place(relx=0.3, rely=0.7)
+        self.forgetLoginLabel.place(relx=0.25, rely=0.2)
+        self.forgetLoginEntry.place(relx=0.25, rely=0.3)
+        self.forgetEmailLabel.place(relx=0.25, rely=0.4)
+        self.forgetEmailEntry.place(relx=0.25, rely=0.5)
+        self.remindPasswordBtn.place(relx=0.28, rely=0.7, relwidth=0.4)
 
     def remind_password(self):
         login = self.forgetLoginEntry.get()
