@@ -67,33 +67,33 @@ class StartWindow(Window):
 
         if '' in (login, password, password_confirm, email, pin):
             messagebox.showerror('Error', 'Please fill all entries.')
-            self.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
+            Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
             return
 
         login_in_db = self.dbm.get_column_values('Users', 'login')
 
         if login in login_in_db:
             messagebox.showerror('Error', f'Login \'{login}\' is already used.')
-            self.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
-                                self.regEmailEntry, self.regPinEntry)
+            Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
+                                  self.regEmailEntry, self.regPinEntry)
             return
 
         if password != password_confirm:
             messagebox.showerror('Error', 'Password and password confirmation don\'t match.')
-            self.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
-                                self.regEmailEntry, self.regPinEntry)
+            Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
+                                  self.regEmailEntry, self.regPinEntry)
             return
 
         if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
             messagebox.showerror('Error', 'Invalid email.')
-            self.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
-                                self.regEmailEntry, self.regPinEntry)
+            Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
+                                  self.regEmailEntry, self.regPinEntry)
             return
 
         self.dbm.insert('Users', 'login, password, email, pin', (login, password, email, pin))
 
-        self.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
-                            self.regEmailEntry, self.regPinEntry)
+        Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
+                              self.regEmailEntry, self.regPinEntry)
 
         self.mailm.send_mail(email, login, msg_type='thanks')
 
@@ -103,23 +103,23 @@ class StartWindow(Window):
 
         if '' in (login, password):
             messagebox.showerror('Error', 'Please fill all entries.')
-            self.passwordEntry.delete(0, 'end')
+            Window.delete_entries(self.passwordEntry)
             return
 
         log_in_db = self.dbm.get_column_values('Users', 'login')
 
         if login not in log_in_db:
             messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
-            self.logEntry.delete(0, 'end')
-            self.passwordEntry.delete(0, 'end')
+            Window.delete_entries(self.logEntry, self.passwordEntry)
             return
 
         if password != self.dbm.get_user_field(login, 'password'):
             messagebox.showerror('Error', 'Entered password is not correct.')
-            self.passwordEntry.delete(0, 'end')
+            Window.delete_entries(self.passwordEntry)
             return
 
         self.user = {
+            'id': self.dbm.get_user_field(login, 'id'),
             'login': login,
             'password': password,
             'email': self.dbm.get_user_field(login, 'email'),
@@ -133,6 +133,4 @@ class StartWindow(Window):
         self.forgetBtn.config(state='disabled')
         forgot_from = ForgetFormWindow(self.root, self.dbm, self.mailm, self.forgetBtn, self.bg_color)
 
-    def delete_entries(self, *entries):
-        for entry in entries:
-            entry.delete(0, 'end')
+

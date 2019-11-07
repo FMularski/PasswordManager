@@ -77,5 +77,17 @@ class DbManager:
             messagebox.showerror('Error', e)
             return
 
+    def get_user_accounts(self, user_id):
+        query = f'SELECT title, login, associated_email, password FROM Accounts WHERE user_id = ?'
+        try:
+            cursor = self.conn.cursor()
+            cursor.execute(query, (user_id,))
+            return cursor.fetchall()
+        except sqlite3.Error as e:
+            messagebox.showerror('Error', e)
+            return []
+
+
+
 
 

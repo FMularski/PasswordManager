@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 import pyautogui as pag
+from window import Window
 
 
 class ForgetFormWindow(tk.Toplevel):
@@ -22,7 +23,7 @@ class ForgetFormWindow(tk.Toplevel):
 
         self.place_widgets()
 
-        self.protocol('WM_DELETE_WINDOW', self.enable_btn)
+        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.btn))
 
     def place_widgets(self):
         self.canvas.pack()
@@ -56,8 +57,4 @@ class ForgetFormWindow(tk.Toplevel):
         if self.mailm.send_mail(email, password, msg_type='password_request'):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
                                                              'You will receive an email with your password.')
-        self.enable_btn()
-
-    def enable_btn(self):
-        self.btn.config(state='normal')
-        self.destroy()
+        Window.close_top_level(self, self.btn)

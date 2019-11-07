@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import messagebox
 import pyautogui as pag
 import re
+from window import Window
 
 
 class AccountFormWindow(tk.Toplevel):
@@ -36,7 +37,7 @@ class AccountFormWindow(tk.Toplevel):
             pass
 
         self.place_widgets()
-        self.protocol('WM_DELETE_WINDOW', self.enable_btn)
+        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.btn))
 
     def place_widgets(self):
         self.canvas.pack()
@@ -63,16 +64,19 @@ class AccountFormWindow(tk.Toplevel):
         password = self.passwordEntry.get()
         passwordConfirm = self.passwordConfirmEntry.get()
 
-        if '' in (title, password, passwordConfirm) or not ( login or associated_email):
+        if '' in (title, password, passwordConfirm) or not (login or associated_email):
+            Window.delete_entries(self.passwordEntry, self.passwordConfirmEntry)
             messagebox.showerror('Error', 'Only login or associated email may remain empty.')
             return
 
         if password != passwordConfirm:
+            Window.delete_entries(self.passwordEntry, self.passwordConfirmEntry)
             messagebox.showerror('Error', 'Password and password confirmation don\'t match.')
             return
 
         if associated_email:
             if not re.match(r'[^@]+@[^@]+\.[^@]+', associated_email):
+                Window.delete_entries(self.passwordEntry, self.passwordConfirmEntry, self.associatedEmailEntry)
                 messagebox.showerror('Error', 'Invalid email.')
                 return
 
@@ -81,8 +85,4 @@ class AccountFormWindow(tk.Toplevel):
         self.dbm.insert('Accounts', 'title, login, associated_email, password, user_id',
                         (title, login, associated_email, password, user_id))
 
-        self.enable_btn()
-
-    def enable_btn(self):
-        self.destroy()
-        self.btn.config(state='normal')
+        Window.close_top_level(self, self.btn)

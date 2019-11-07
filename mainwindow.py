@@ -18,6 +18,8 @@ class MainWindow(Window):
 
         self.place_widgets()
 
+        print(self.dbm.get_user_accounts(self.user['id']))
+
     def place_widgets(self):
         self.userInfoLabel.place(relx=0, rely=0)
         self.accountsListLabel.place(relx=0, rely=0.05)

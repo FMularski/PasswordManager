@@ -21,3 +21,13 @@ class Window:
 
     def run(self):
         self.root.mainloop()
+
+    @classmethod
+    def delete_entries(cls, *entries):
+        for entry in entries:
+            entry.delete(0, 'end')
+
+    @classmethod
+    def close_top_level(cls, top, btn):
+        top.destroy()
+        btn.config(state='normal')
