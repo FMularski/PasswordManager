@@ -82,7 +82,14 @@ class DbManager:
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, (user_id,))
-            return cursor.fetchall()
+
+            accounts = list()
+            raw_accounts = cursor.fetchall()
+
+            for i in range(len(raw_accounts)): # mapping raw accounts data to dict
+                accounts.append({'title': raw_accounts[i][0], 'login': raw_accounts[i][1],
+                                 'associated_email': raw_accounts[i][2], 'password': raw_accounts[i][3]})
+            return accounts
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return []
