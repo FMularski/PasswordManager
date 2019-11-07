@@ -1,21 +1,33 @@
 import smtplib
 from time import gmtime, strftime
 import emailpass
+from tkinter import messagebox
 
 
 class MailManager:
-    def send_mail(self, to_address, login, msg_type='alert'):
-        mail_conn = smtplib.SMTP('smtp.gmail.com', 587)
-        mail_conn.ehlo()
-        mail_conn.starttls()
-        mail_conn.login(emailpass.login, emailpass.password)
+    def send_mail(self, to_address, data, msg_type='alert'):
+        try:
+            mail_conn = smtplib.SMTP('smtp.gmail.com', 587)
+            mail_conn.ehlo()
+            mail_conn.starttls()
+            mail_conn.login(emailpass.login, emailpass.password)
 
-        if msg_type == 'thanks':
-            msg = f'Subject: Hello {login}!\n\nThank you for registering to Password Manager. Enjoy :)'
-        else:
-            time = strftime('%Y-%m-%d %H:%M:%S', gmtime())
-            msg = f'Subject: Login Detected. \n\nLogin to your account {login} has been detected ' \
-                  f'in the Password Manager at {time}. Always remember to keep you accounts safe!'
+            if msg_type == 'thanks':
+                msg = f'Subject: Hello {data}!\n\nThank you for registering to Password Manager.\n\nAlways remember' \
+                      f' to keep your accounts safe!'
+            elif msg_type == 'alert':
+                time = strftime('%Y-%m-%d %H:%M:%S', gmtime())
+                msg = f'Subject: Login Detected. \n\nLogin to your account {data} has been detected ' \
+                      f'in Password Manager at {time}.\n\nAlways remember to keep you accounts safe!'
+            else:
+                msg = f'Subject: Password reminder request.\n\nYou have requested a password reminder for your ' \
+                      'Password Manager account. Please scroll down' + '.\n' * 50 + \
+                      f'Password: {data}.\n\nAlways remember to ' \
+                      f'keep your accounts safe!'
 
-        mail_conn.sendmail(emailpass.login, to_address, msg)
-        mail_conn.quit()
+            mail_conn.sendmail(emailpass.login, to_address, msg)
+            mail_conn.quit()
+            return True
+        except Exception as e:
+            messagebox.showerror('Error', e)
+            return False

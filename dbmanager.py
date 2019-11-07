@@ -21,7 +21,7 @@ class DbManager:
 
         create_table_accounts_query = """
                 CREATE TABLE IF NOT EXISTS Accounts(
-                id integer PRIMARY KEY,
+                id integer PRIMARY KEY AUTOINCREMENT,
                 name text NOT NULL,
                 login text NOT NULL,
                 password text NOT NULL,

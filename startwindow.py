@@ -2,7 +2,7 @@ from window import Window
 import tkinter as tk
 from tkinter import messagebox
 import re
-
+from forgetformwindow import ForgetFormWindow
 
 class StartWindow(Window):
     def __init__(self, db_manager, mail_manager):
@@ -15,6 +15,7 @@ class StartWindow(Window):
         self.passwordLabel = tk.Label(self.root, text="Password:", bg=self.bg_color)
         self.passwordEntry = tk.Entry(self.root, width=25, show='*')
         self.logInBtn = tk.Button(self.root, text="Log In", bg='white', command=self.login)
+        self.forgetBtn = tk.Button(self.root, text="Forgot password?", bg="white", command=self.forgot_password)
 
         # registration widgets
         self.regLabel = tk.Label(self.root, text="Registration", font="12", bg=self.bg_color)
@@ -40,6 +41,7 @@ class StartWindow(Window):
         self.passwordLabel.place(relx=0.1, rely=0.4)
         self.passwordEntry.place(relx=0.1, rely=0.45)
         self.logInBtn.place(relx=0.1, rely=0.55)
+        self.forgetBtn.place(relx=0.1, rely=0.65)
 
         # registration widgets
         self.regLabel.place(relx=0.6, rely=0.2)
@@ -125,6 +127,10 @@ class StartWindow(Window):
 
         self.mailm.send_mail(self.user['email'], login)
         self.root.destroy()
+
+    def forgot_password(self):
+        self.forgetBtn.config(state='disabled')
+        forgot_from = ForgetFormWindow(self.root, self.dbm, self.mailm, self.forgetBtn, self.bg_color)
 
     def delete_entries(self, *entries):
         for entry in entries:
