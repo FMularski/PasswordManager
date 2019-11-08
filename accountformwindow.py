@@ -6,30 +6,34 @@ from window import Window
 
 
 class AccountFormWindow(tk.Toplevel):
-    def __init__(self, master, user, dbm, bg_color, btn, mode):
-        super().__init__(master)
-        self.master = master
-        self.user = user
-        self.dbm = dbm
+    #  def __init__(self, main, master, user, dbm, bg_color, btn, mode):
+    def __init__(self, master, mode):
+        super().__init__(master.root)
+        self.user = master.user
+        self.dbm = master.dbm
         self.mode = mode
-        self.btn = btn
+        self.btn = master.addAccountBtn
+
+        self.refreshAccountListMethod = master.display_accounts
+
+        self.bg_color = master.bg_color
         self.width, self.height = pag.size()
 
-        self.canvas = tk.Canvas(self, width=self.width / 7, height=self.height / 2, bg=bg_color)
-        self.addAccountLabel = tk.Label(self, text=f'{self.mode} account', bg=bg_color, font='12')
-        self.accTitleLabel = tk.Label(self, text='Title:', bg=bg_color)
+        self.canvas = tk.Canvas(self, width=self.width / 7, height=self.height / 2, bg=self.bg_color)
+        self.addAccountLabel = tk.Label(self, text=f'{self.mode} account', bg=self.bg_color, font='12')
+        self.accTitleLabel = tk.Label(self, text='Title:', bg=self.bg_color)
         self.accTitleEntry = tk.Entry(self, width=25)
-        self.loginLabel = tk.Label(self, text='Login*:', bg=bg_color)
+        self.loginLabel = tk.Label(self, text='Login*:', bg=self.bg_color)
         self.loginEntry = tk.Entry(self, width=25)
-        self.associatedEmailLabel = tk.Label(self, text='Associated Email*:', bg=bg_color)
+        self.associatedEmailLabel = tk.Label(self, text='Associated Email*:', bg=self.bg_color)
         self.associatedEmailEntry = tk.Entry(self, width=25)
-        self.requiredInfo = tk.Label(self, text='* At least one of these two\nis required.', bg=bg_color)
+        self.requiredInfo = tk.Label(self, text='* At least one of these two\nis required.', bg=self.bg_color)
         self.saveBtn = tk.Button(self, text='Save', bg='white', command=self.add_account)
 
         if mode == 'Add':
-            self.passwordLabel = tk.Label(self, text='Password:', bg=bg_color)
+            self.passwordLabel = tk.Label(self, text='Password:', bg=self.bg_color)
             self.passwordEntry = tk.Entry(self, width=25, show='*')
-            self.passwordConfirmLabel = tk.Label(self, text='Confirm Password:', bg=bg_color)
+            self.passwordConfirmLabel = tk.Label(self, text='Confirm Password:', bg=self.bg_color)
             self.passwordConfirmEntry = tk.Entry(self, width=25, show='*')
         elif mode == 'Edit':
             pass
@@ -62,14 +66,14 @@ class AccountFormWindow(tk.Toplevel):
         login = self.loginEntry.get()
         associated_email = self.associatedEmailEntry.get()
         password = self.passwordEntry.get()
-        passwordConfirm = self.passwordConfirmEntry.get()
+        password_confirm = self.passwordConfirmEntry.get()
 
-        if '' in (title, password, passwordConfirm) or not (login or associated_email):
+        if '' in (title, password, password_confirm) or not (login or associated_email):
             Window.delete_entries(self.passwordEntry, self.passwordConfirmEntry)
             messagebox.showerror('Error', 'Only login or associated email may remain empty.')
             return
 
-        if password != passwordConfirm:
+        if password != password_confirm:
             Window.delete_entries(self.passwordEntry, self.passwordConfirmEntry)
             messagebox.showerror('Error', 'Password and password confirmation don\'t match.')
             return
@@ -83,6 +87,7 @@ class AccountFormWindow(tk.Toplevel):
         user_id = self.dbm.get_user_field(self.user['login'], 'id')
 
         self.dbm.insert('Accounts', 'title, login, associated_email, password, user_id',
-                        (title, login, associated_email, password, user_id))
+                               (title, login, associated_email, password, user_id))
 
+        self.refreshAccountListMethod()
         Window.close_top_level(self, self.btn)

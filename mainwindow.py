@@ -7,6 +7,7 @@ class MainWindow(Window):
     def __init__(self, dbm, mailm, user):
         super().__init__(dbm, mailm)
         self.user = user
+        self.account_rows = []
 
         self.titleWidth = 0
         self.loginWidth = 0.2
@@ -27,8 +28,6 @@ class MainWindow(Window):
         self.place_widgets()
         self.display_accounts()
 
-        print(self.dbm.get_user_accounts(self.user['id']))
-
     def place_widgets(self):
         self.userInfoLabel.place(relx=0, rely=0)
         self.accountsListLabel.place(relx=0, rely=0.05)
@@ -37,14 +36,13 @@ class MainWindow(Window):
         self.associatedEmailLabel.place(relx=self.associatedEmailWidth, rely=0.1)
         self.passwordLabel.place(relx=self.passwordWidth, rely=0.1)
         self.optionsLabel.place(relx=self.passwordWidth + 0.275, rely=0.1)
-        #self.addAccountBtn.place(relx=0.125, rely=0.025, relwidth=0.2, relheight=0.05)
 
     def open_acc_form(self):
         self.addAccountBtn.config(state='disabled')
-        acc_form_window = AccountFormWindow(self.root, self.user, self.dbm, self.bg_color,
-                                            self.addAccountBtn, mode='Add')
+        form_window = AccountFormWindow(self, mode='Add')
 
     def display_accounts(self):
+        self.account_rows.clear()
         accounts = self.dbm.get_user_accounts(self.user['id'])
         for i in range(len(accounts)):
             title = tk.Label(self.root, text=accounts[i]['title'], bg=self.bg_color)
@@ -62,8 +60,14 @@ class MainWindow(Window):
             edit_btn = tk.Button(self.root, text='Edit', bg='white')
             edit_btn.place(relx=self.editWidth, rely=0.15 + 0.05 * i, relheight=0.04)
 
-            edit_btn = tk.Button(self.root, text='Delete', bg='red', fg='white')
-            edit_btn.place(relx=self.deleteWidth, rely=0.15 + 0.05 * i, relheight=0.04)
+            delete_btn = tk.Button(self.root, text='Delete', bg='red', fg='white')
+            delete_btn.place(relx=self.deleteWidth, rely=0.15 + 0.05 * i, relheight=0.04)
+
+            row = {'title': title, 'login': login, 'associated_email': associated_email,
+                   'show_btn': show_btn, 'edit_btn': edit_btn, 'delete_btn': delete_btn,
+                   'index': len(self.account_rows)}
+
+            self.account_rows.append(row)
 
         self.addAccountBtn.place(relx=0.005, rely=0.15 + 0.05 * len(accounts))
 

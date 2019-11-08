@@ -29,5 +29,5 @@ class Window:
 
     @classmethod
     def close_top_level(cls, top, btn):
-        top.destroy()
         btn.config(state='normal')
+        top.destroy()
