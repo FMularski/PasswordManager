@@ -78,7 +78,7 @@ class DbManager:
             return
 
     def get_user_accounts(self, user_id):
-        query = f'SELECT title, login, associated_email, password FROM Accounts WHERE user_id = ?'
+        query = f'SELECT id, title, login, associated_email, password FROM Accounts WHERE user_id = ?'
         try:
             cursor = self.conn.cursor()
             cursor.execute(query, (user_id,))
@@ -86,13 +86,18 @@ class DbManager:
             accounts = list()
             raw_accounts = cursor.fetchall()
 
-            for i in range(len(raw_accounts)): # mapping raw accounts data to dict
-                accounts.append({'title': raw_accounts[i][0], 'login': raw_accounts[i][1],
-                                 'associated_email': raw_accounts[i][2], 'password': raw_accounts[i][3]})
+            for i in range(len(raw_accounts)):  # mapping raw accounts data to dict
+                accounts.append({'id': raw_accounts[i][0], 'title': raw_accounts[i][1], 'login': raw_accounts[i][2],
+                                 'associated_email': raw_accounts[i][3], 'password': raw_accounts[i][4]})
             return accounts
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return []
+
+    def delete(self, table, column, value):
+        self.conn.execute(f'DELETE FROM {table} WHERE {column} = {value}')
+        self.conn.commit()
+
 
 
 
