@@ -113,17 +113,17 @@ class StartWindow(Window):
             Window.delete_entries(self.logEntry, self.passwordEntry)
             return
 
-        if password != self.dbm.get_user_field(login, 'password'):
+        if password != self.dbm.get_column_value_where('Users', 'password', 'login', login):
             messagebox.showerror('Error', 'Entered password is not correct.')
             Window.delete_entries(self.passwordEntry)
             return
 
         self.user = {
-            'id': self.dbm.get_user_field(login, 'id'),
+            'id': self.dbm.get_column_value_where('Users', 'id', 'login', login),
             'login': login,
             'password': password,
-            'email': self.dbm.get_user_field(login, 'email'),
-            'pin': self.dbm.get_user_field(login, 'pin')
+            'email': self.dbm.get_column_value_where('Users', 'email', 'login', login),
+            'pin': self.dbm.get_column_value_where('Users', 'pin', 'login', login)
         }
 
         self.mailm.send_mail(self.user['email'], login)

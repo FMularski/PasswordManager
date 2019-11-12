@@ -9,6 +9,8 @@ class MainWindow(Window):
         super().__init__(dbm, mailm)
         self.user = user
         self.account_rows = []
+        self.showBtns = []
+        self.editBtns = []
 
         self.titleWidth = 0
         self.loginWidth = 0.2
@@ -47,7 +49,30 @@ class MainWindow(Window):
             self.dbm.delete('Accounts', 'id', acc_id)
             self.display_accounts()
 
+    def check_pin(self, pin, btn):
+        if pin.get() != self.user['pin']:
+            messagebox.showerror('Error', 'Invalid PIN.')
+            pin.delete(0, 'end')
+            return
+        btn['btn'].destroy()
+        pin.destroy()
+
+        password = tk.Label(self.root,
+                            text=self.dbm.get_column_value_where('Accounts', 'password', 'id', btn['acc_id']),
+                            bg=self.bg_color)
+        password.place(relx=btn['x'], rely=btn['y'])
+
+    def show_password(self, btn):
+        btn['btn']['text'] = 'Show'
+        pin_entry = tk.Entry(self.root, width=17, show='*')
+        pin_entry.place(relx=btn['x'] + 0.05, rely=btn['y'])
+
+        btn['btn']['command'] = lambda: self.check_pin(pin_entry, btn)
+
+        # TODO: 1) fix show labels/entries - should disappear after adding/deleting new accounts 2) add comments
+
     def display_accounts(self):
+        self.showBtns.clear()
         for row in self.account_rows:
             for widget in row.values():
                 widget.destroy()
@@ -64,12 +89,15 @@ class MainWindow(Window):
             associated_email = tk.Label(self.root, text=accounts[i]['associated_email'], bg=self.bg_color)
             associated_email.place(relx=self.associatedEmailWidth, rely=0.15 + 0.05 * i)
 
-            show_btn = tk.Button(self.root, text='Show', bg='white')
-            show_btn.place(relx=self.passwordWidth + 0.01, rely=0.15 + 0.05 * i, relheight=0.04)
+            show_btn = tk.Button(self.root, text='Enter PIN to show', bg='white')
+            show_btn.place(relx=self.passwordWidth, rely=0.15 + 0.05 * i, relheight=0.04)
+            self.showBtns.append({'btn': show_btn, 'y': 0.15 + 0.05 * i, 'x': self.passwordWidth,
+                                  'acc_id': accounts[i]['id']})
+            self.showBtns[i]['btn']['command'] = lambda btn=self.showBtns[i]: self.show_password(btn)
 
             edit_btn = tk.Button(self.root, text='Edit', bg='white')
-
             edit_btn.place(relx=self.editWidth, rely=0.15 + 0.05 * i, relheight=0.04)
+            self.editBtns.append({'btn': edit_btn, 'x': self.editWidth, 'y': 0.15 + 0.05 * i})
 
             delete_btn = tk.Button(self.root, text='Delete', bg='red', fg='white',
                                    command=lambda: self.delete_account(accounts[i]['id']))
@@ -81,5 +109,6 @@ class MainWindow(Window):
             self.account_rows.append(row)
 
         self.addAccountBtn.place(relx=0.005, rely=0.15 + 0.05 * len(accounts))
+
 
 

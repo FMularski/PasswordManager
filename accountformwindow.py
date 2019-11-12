@@ -84,7 +84,7 @@ class AccountFormWindow(tk.Toplevel):
                 messagebox.showerror('Error', 'Invalid email.')
                 return
 
-        user_id = self.dbm.get_user_field(self.user['login'], 'id')
+        user_id = self.dbm.get_column_value_where('Users', 'id', 'login', self.user['login'])
 
         self.dbm.insert('Accounts', 'title, login, associated_email, password, user_id',
                                (title, login, associated_email, password, user_id))

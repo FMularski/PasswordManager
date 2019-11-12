@@ -48,11 +48,11 @@ class ForgetFormWindow(tk.Toplevel):
             messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
             return
 
-        if email != self.dbm.get_user_field(login, 'email'):
+        if email != self.dbm.get_column_value_where('Users', 'email', 'login', login):
             messagebox.showerror('Error', f'Email \'{email}\' does not match the entered login.')
             return
 
-        password = self.dbm.get_user_field(login, 'password')
+        password = self.dbm.get_column_value_where('Users', 'password', 'login', login)
 
         if self.mailm.send_mail(email, password, msg_type='password_request'):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '

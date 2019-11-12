@@ -67,11 +67,11 @@ class DbManager:
 
         messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
 
-    def get_user_field(self, login, field):
-        query = f'SELECT {field} FROM Users WHERE login = ?'
+    def get_column_value_where(self, table, column, where_col, value):
+        query = f'SELECT {column} FROM {table} WHERE {where_col} = ?'
         try:
             cursor = self.conn.cursor()
-            cursor.execute(query, (login,))
+            cursor.execute(query, (value,))
             return cursor.fetchone()[0]
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
