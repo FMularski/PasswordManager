@@ -31,3 +31,8 @@ class Window:
     def close_top_level(cls, top, btn):
         btn.config(state='normal')
         top.destroy()
+
+    @classmethod
+    def clear_widgets(cls, widgets):
+        for widget in widgets:
+            widget.destroy()

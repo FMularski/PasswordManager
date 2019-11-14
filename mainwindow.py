@@ -62,6 +62,9 @@ class MainWindow(Window):
                             bg=self.bg_color)
         password.place(relx=btn['x'], rely=btn['y'])
 
+        # % same here, adding shown password label to account_rows eliminates the bug
+        self.account_rows.append({'shown_password': password})
+
     def show_password(self, btn):
         btn['btn']['text'] = 'Show'
         pin_entry = tk.Entry(self.root, width=17, show='*')
@@ -69,7 +72,12 @@ class MainWindow(Window):
 
         btn['btn']['command'] = lambda: self.check_pin(pin_entry, btn)
 
-        # TODO: 1) fix show labels/entries - should disappear after adding/deleting new accounts 2) add comments
+        # % account_rows is cleared every time display_accounts is called so adding these
+        # widgets gets rid of the bug which caused show btn and pin entry to be left
+        # after add/delete account
+        self.account_rows.append({'show_btn': btn['btn'], 'pin_entry': pin_entry})
+
+        # TODO: 1) try to get rid off showBtns list and use only account_rows 2) add comments
 
     def display_accounts(self):
         self.showBtns.clear()
