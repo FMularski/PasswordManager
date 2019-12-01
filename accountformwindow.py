@@ -6,13 +6,13 @@ from window import Window
 
 
 class AccountFormWindow(tk.Toplevel):
-    #  def __init__(self, main, master, user, dbm, bg_color, btn, mode):
     def __init__(self, master, mode):
         super().__init__(master.root)
         self.user = master.user
         self.dbm = master.dbm
         self.mode = mode
-        self.btn = master.addAccountBtn
+        # self.btn = master.addAccountBtn
+        self.toDisable = master.toDisable
 
         self.refreshAccountListMethod = master.display_accounts
 
@@ -28,20 +28,22 @@ class AccountFormWindow(tk.Toplevel):
         self.associatedEmailLabel = tk.Label(self, text='Associated Email*:', bg=self.bg_color)
         self.associatedEmailEntry = tk.Entry(self, width=25)
         self.requiredInfo = tk.Label(self, text='* At least one of these two\nis required.', bg=self.bg_color)
-        self.saveBtn = tk.Button(self, text='Save', bg='white', command=self.add_account)
+        self.saveBtn = tk.Button(self, text='Save', bg='white')
 
         if mode == 'Add':
-            self.passwordLabel = tk.Label(self, text='Password:', bg=self.bg_color)
-            self.passwordEntry = tk.Entry(self, width=25, show='*')
-            self.passwordConfirmLabel = tk.Label(self, text='Confirm Password:', bg=self.bg_color)
-            self.passwordConfirmEntry = tk.Entry(self, width=25, show='*')
+            self.saveBtn['command'] = self.add_account
         elif mode == 'Edit':
-            pass
+            self.saveBtn['command'] = self.edit_account
         else:
-            pass
+            self.saveBtn['command'] = None
+
+        self.passwordLabel = tk.Label(self, text='Password:', bg=self.bg_color)
+        self.passwordEntry = tk.Entry(self, width=25, show='*')
+        self.passwordConfirmLabel = tk.Label(self, text='Confirm Password:', bg=self.bg_color)
+        self.passwordConfirmEntry = tk.Entry(self, width=25, show='*')
 
         self.place_widgets()
-        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.btn))
+        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.toDisable))
 
     def place_widgets(self):
         self.canvas.pack()
@@ -53,13 +55,11 @@ class AccountFormWindow(tk.Toplevel):
         self.associatedEmailLabel.place(relx=0.15, rely=0.3)
         self.associatedEmailEntry.place(relx=0.15, rely=0.35)
         self.requiredInfo.place(relx=0.15, rely=0.65)
-
-        if self.mode == 'Add':
-            self.passwordLabel.place(relx=0.15, rely=0.4)
-            self.passwordEntry.place(relx=0.15, rely=0.45)
-            self.passwordConfirmLabel.place(relx=0.15, rely=0.5)
-            self.passwordConfirmEntry.place(relx=0.15, rely=0.55)
-            self.saveBtn.place(relx=0.3, rely=0.8, relwidth=0.4)
+        self.passwordLabel.place(relx=0.15, rely=0.4)
+        self.passwordEntry.place(relx=0.15, rely=0.45)
+        self.passwordConfirmLabel.place(relx=0.15, rely=0.5)
+        self.passwordConfirmEntry.place(relx=0.15, rely=0.55)
+        self.saveBtn.place(relx=0.3, rely=0.8, relwidth=0.4)
 
     def add_account(self):
         title = self.accTitleEntry.get()
@@ -87,7 +87,11 @@ class AccountFormWindow(tk.Toplevel):
         user_id = self.dbm.get_column_value_where('Users', 'id', 'login', self.user['login'])
 
         self.dbm.insert('Accounts', 'title, login, associated_email, password, user_id',
-                               (title, login, associated_email, password, user_id))
+                        (title, login, associated_email, password, user_id))
 
         self.refreshAccountListMethod()
-        Window.close_top_level(self, self.btn)
+        Window.close_top_level(self, self.toDisable)
+
+    def edit_account(self):
+        self.refreshAccountListMethod()
+        Window.close_top_level(self, self.toDisable)

@@ -23,7 +23,7 @@ class ForgetFormWindow(tk.Toplevel):
 
         self.place_widgets()
 
-        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.btn))
+        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, [self.btn]))
 
     def place_widgets(self):
         self.canvas.pack()
@@ -57,4 +57,4 @@ class ForgetFormWindow(tk.Toplevel):
         if self.mailm.send_mail(email, password, msg_type='password_request'):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
                                                              'You will receive an email with your password.')
-        Window.close_top_level(self, self.btn)
+        Window.close_top_level(self, [self.btn])
