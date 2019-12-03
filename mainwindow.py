@@ -57,7 +57,7 @@ class MainWindow(Window):
     def edit_account(self, acc_id):
         self.disable_buttons()
         form_window = AccountFormWindow(self, mode='Edit')
-        pass
+        form_window.load_account_data(acc_id)
 
     def check_pin(self, pin, btn):
         if pin.get() != self.user['pin']:

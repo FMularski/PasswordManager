@@ -67,6 +67,16 @@ class DbManager:
 
         messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
 
+    def update(self, table, column, new_value, where_column, where_column_value):
+        try:
+            update_query = f'UPDATE {table} SET {column} = ? WHERE {where_column} = ?'
+            self.conn.execute(update_query, (new_value, where_column_value,))
+            self.conn.commit()
+
+        except sqlite3.Error as e:
+            messagebox.showerror('Error', e)
+            return
+
     def get_column_value_where(self, table, column, where_col, value):
         query = f'SELECT {column} FROM {table} WHERE {where_col} = ?'
         try:
