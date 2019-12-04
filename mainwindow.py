@@ -2,6 +2,7 @@ from window import Window
 import tkinter as tk
 from accountformwindow import AccountFormWindow
 from tkinter import messagebox
+from scrollframe import ScrollFrame
 
 
 class MainWindow(Window):
@@ -20,13 +21,13 @@ class MainWindow(Window):
         self.editWidth = 0.85
         self.deleteWidth = 0.9
 
+        self.scrollframe = ScrollFrame(self.root)
         self.userInfoLabel = tk.Label(self.root, text=f'Logged in as {user["login"]}', bg=self.bg_color)
-        self.accountsListLabel = tk.Label(self.root, text='Accounts List:', bg=self.bg_color)
-        self.titleLabel = tk.Label(self.root, text='Name', bg=self.bg_color)
-        self.loginLabel = tk.Label(self.root, text='Login', bg=self.bg_color)
-        self.associatedEmailLabel = tk.Label(self.root, text='Associated Email', bg=self.bg_color)
-        self.passwordLabel = tk.Label(self.root, text='Password', bg=self.bg_color)
-        self.optionsLabel = tk.Label(self.root, text='Options', bg=self.bg_color)
+        self.titleLabel = tk.Label(self.scrollframe.viewPort, text='Title', bg=self.bg_color)
+        self.loginLabel = tk.Label(self.scrollframe.viewPort, text='Login', bg=self.bg_color)
+        self.associatedEmailLabel = tk.Label(self.scrollframe.viewPort, text='Associated Email', bg=self.bg_color)
+        self.passwordLabel = tk.Label(self.scrollframe.viewPort, text='Password', bg=self.bg_color)
+        self.separationLabel = tk.Label(self.scrollframe.viewPort, text=' ' * 40, bg=self.bg_color)
         self.addAccountBtn = tk.Button(self.root, text='+ Add Account', bg='#6bfc03', command=self.open_add_acc_form)
 
         self.place_widgets()
@@ -34,12 +35,13 @@ class MainWindow(Window):
 
     def place_widgets(self):
         self.userInfoLabel.place(relx=0, rely=0)
-        self.accountsListLabel.place(relx=0, rely=0.05)
-        self.titleLabel.place(relx=self.titleWidth, rely=0.1)
-        self.loginLabel.place(relx=self.loginWidth, rely=0.1)
-        self.associatedEmailLabel.place(relx=self.associatedEmailWidth, rely=0.1)
-        self.passwordLabel.place(relx=self.passwordWidth, rely=0.1)
-        self.optionsLabel.place(relx=self.passwordWidth + 0.275, rely=0.1)
+        self.addAccountBtn.place(relx=0, rely=0.05)
+        self.scrollframe.place(relx=0, rely=0.15, relwidth=1, relheight=0.80)
+        self.titleLabel.grid(row=0, column=0)
+        self.loginLabel.grid(row=0, column=1)
+        self.associatedEmailLabel.grid(row=0, column=2)
+        self.passwordLabel.grid(row=0, column=3)
+        self.separationLabel.grid(row=0, column=4)
 
     def disable_buttons(self):
         for btn in self.toDisable:
@@ -67,18 +69,19 @@ class MainWindow(Window):
         btn['btn'].destroy()
         pin.destroy()
 
-        password = tk.Label(self.root,
+        password = tk.Label(self.scrollframe.viewPort,
                             text=self.dbm.get_column_value_where('Accounts', 'password', 'id', btn['acc_id']),
                             bg=self.bg_color)
-        password.place(relx=btn['x'], rely=btn['y'])
+        password.grid(row=btn['y'], column=3)
 
         # % same here, adding shown password label to accountsRowsWidgets eliminates the bug
         self.accountsRowsWidgets.append({'shown_password': password})
 
     def show_password(self, btn):
         btn['btn']['text'] = 'Show'
-        pin_entry = tk.Entry(self.root, width=17, show='*')
-        pin_entry.place(relx=btn['x'] + 0.05, rely=btn['y'])
+        pin_entry = tk.Entry(self.scrollframe.viewPort, width=17, show='*')
+        pin_entry.grid(row=btn['y'], column=4)
+        # pin_entry.place(relx=btn['x'] + 0.05, rely=btn['y'])
 
         btn['btn']['command'] = lambda: self.check_pin(pin_entry, btn)
 
@@ -100,32 +103,33 @@ class MainWindow(Window):
         accounts = self.dbm.get_user_accounts(self.user['id'])
 
         for i in range(len(accounts)):
-            title = tk.Label(self.root, text=accounts[i]['title'], bg=self.bg_color)
-            title.place(relx=self.titleWidth, rely=0.15 + 0.05 * i)
+            title = tk.Label(self.scrollframe.viewPort, text=accounts[i]['title'], bg=self.bg_color)
+            title.grid(row=i + 1, column=0)
 
-            login = tk.Label(self.root, text=accounts[i]['login'], bg=self.bg_color)
-            login.place(relx=self.loginWidth, rely=0.15 + 0.05 * i)
+            login = tk.Label(self.scrollframe.viewPort, text=accounts[i]['login'], bg=self.bg_color)
+            login.grid(row=i + 1, column=1)
 
-            associated_email = tk.Label(self.root, text=accounts[i]['associated_email'], bg=self.bg_color)
-            associated_email.place(relx=self.associatedEmailWidth, rely=0.15 + 0.05 * i)
+            associated_email = tk.Label(self.scrollframe.viewPort, text=accounts[i]['associated_email'],
+                                        bg=self.bg_color)
+            associated_email.grid(row=i + 1, column=2)
 
             # SHOW BTN
-            show_btn = tk.Button(self.root, text='Enter PIN to show', bg='white')
-            show_btn.place(relx=self.passwordWidth, rely=0.15 + 0.05 * i, relheight=0.04)
-            self.showButtons.append({'btn': show_btn, 'y': 0.15 + 0.05 * i, 'x': self.passwordWidth,
+            show_btn = tk.Button(self.scrollframe.viewPort, text='Enter PIN to show', bg='white')
+            show_btn.grid(row=i + 1, column=3)
+            self.showButtons.append({'btn': show_btn, 'y': i + 1, 'x': self.passwordWidth,
                                      'acc_id': accounts[i]['id']})
             self.showButtons[i]['btn']['command'] = lambda btn=self.showButtons[i]: self.show_password(btn)
 
             # EDIT BTN
-            edit_btn = tk.Button(self.root, text='Edit', bg='white',
+            edit_btn = tk.Button(self.scrollframe.viewPort, text='Edit', bg='white',
                                  command=lambda index=i: self.edit_account(accounts[index]['id']))
-            edit_btn.place(relx=self.editWidth, rely=0.15 + 0.05 * i, relheight=0.04)
-            self.editButtons.append({'btn': edit_btn, 'x': self.editWidth, 'y': 0.15 + 0.05 * i})
+            edit_btn.grid(row=i + 1, column=99)
+            self.editButtons.append({'btn': edit_btn, 'x': self.editWidth, 'y': 0.05 * i})
 
             # DELETE BTN
-            delete_btn = tk.Button(self.root, text='Delete', bg='red', fg='white',
+            delete_btn = tk.Button(self.scrollframe.viewPort, text='Delete', bg='red', fg='white',
                                    command=lambda index=i: self.delete_account(accounts[index]['id']))
-            delete_btn.place(relx=self.deleteWidth, rely=0.15 + 0.05 * i, relheight=0.04)
+            delete_btn.grid(row=i + 1, column=100)
 
             row = {'title': title, 'login': login, 'associated_email': associated_email,
                    'show_btn': show_btn, 'edit_btn': edit_btn, 'delete_btn': delete_btn}
@@ -136,7 +140,6 @@ class MainWindow(Window):
             self.toDisable.append(delete_btn)
 
         self.toDisable.append(self.addAccountBtn)
-        self.addAccountBtn.place(relx=0.005, rely=0.15 + 0.05 * len(accounts))
 
 
 
