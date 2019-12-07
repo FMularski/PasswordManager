@@ -148,20 +148,27 @@ class MainWindow(Window):
     def export(self):
         pin = simpledialog.askstring('Export accounts data', 'PIN:')
 
+        if not pin:
+            messagebox.showwarning('Aborted', 'Export aborted.')
+            return
+
         if pin == self.user['pin']:
             path = filedialog.askdirectory()
             path += '/exported_accounts.txt'
 
             accounts = self.dbm.get_user_accounts(self.user['id'])
 
-            with open(path, 'w') as file:
-                for account in accounts:
-                    row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' +\
-                        account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
-                    file.write(row)
-            messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
-                                'passwords. Be cautious when granting access to this file. Deleting the file from '
-                                'widely available disk space is recommended. ')
+            try:
+                with open(path, 'w') as file:
+                    for account in accounts:
+                        row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' +\
+                            account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
+                        file.write(row)
+                messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
+                                    'passwords. Be cautious when granting access to this file. Deleting the file from '
+                                    'widely available disk space is recommended. ')
+            except PermissionError:
+                pass
         else:
             messagebox.showerror('Error', 'Invalid PIN.')
 
