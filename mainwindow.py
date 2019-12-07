@@ -1,7 +1,7 @@
 from window import Window
 import tkinter as tk
 from accountformwindow import AccountFormWindow
-from tkinter import messagebox
+from tkinter import messagebox, filedialog, simpledialog
 from scrollframe import ScrollFrame
 
 
@@ -29,6 +29,8 @@ class MainWindow(Window):
         self.passwordLabel = tk.Label(self.scrollframe.viewPort, text='Password', bg=self.bg_color)
         self.separationLabel = tk.Label(self.scrollframe.viewPort, text=' ' * 40, bg=self.bg_color)
         self.addAccountBtn = tk.Button(self.root, text='+ Add Account', bg='#6bfc03', command=self.open_add_acc_form)
+        self.settingBtn = tk.Button(self.root, text='Settings', bg='#dedcd1', command=None)
+        self.exportBtn = tk.Button(self.root, text='Export as txt', bg='#dedcd1', command=self.export)
 
         self.place_widgets()
         self.display_accounts()
@@ -36,6 +38,8 @@ class MainWindow(Window):
     def place_widgets(self):
         self.userInfoLabel.place(relx=0, rely=0)
         self.addAccountBtn.place(relx=0, rely=0.05)
+        self.exportBtn.place(relx=0.12, rely=0.05)
+        self.settingBtn.place(relx=0.9, rely=0.05)
         self.scrollframe.place(relx=0, rely=0.15, relwidth=1, relheight=0.80)
         self.titleLabel.grid(row=0, column=0)
         self.loginLabel.grid(row=0, column=1)
@@ -140,6 +144,29 @@ class MainWindow(Window):
             self.toDisable.append(delete_btn)
 
         self.toDisable.append(self.addAccountBtn)
+
+    def export(self):
+        pin = simpledialog.askstring('Export accounts data', 'PIN:')
+
+        if pin == self.user['pin']:
+            path = filedialog.askdirectory()
+            path += '/exported_accounts.txt'
+
+            accounts = self.dbm.get_user_accounts(self.user['id'])
+
+            with open(path, 'w') as file:
+                for account in accounts:
+                    row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' +\
+                        account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
+                    file.write(row)
+            messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
+                                'passwords. Be cautious when granting access to this file. Deleting the file from '
+                                'widely available disk space is recommended. ')
+        else:
+            messagebox.showerror('Error', 'Invalid PIN.')
+
+
+
 
 
 
