@@ -28,7 +28,6 @@ class Window:
     def close_top_level(cls, top, to_disable):
         for button in to_disable:
             button.config(state='normal')
-
         top.destroy()
 
     @classmethod
