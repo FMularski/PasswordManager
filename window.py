@@ -12,6 +12,9 @@ class Window:
         self.root = tk.Tk()
         self.root.title('Password Manager')
 
+        self.language = tk.StringVar(self.root)
+        self.language.set('English')
+
         self.bg_color = '#fff8ad'
 
         self.canvas = tk.Canvas(self.root, width=self.windowWidth / 2, height=self.windowHeight / 2, bg=self.bg_color)

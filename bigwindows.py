@@ -354,14 +354,43 @@ class SettingsWindow(Window):
         self.mainWindow = main_window
 
         self.settingsLabel = tk.Label(self.root, text='Settings', bg=self.bg_color, font=10)
+
+        self.securityLabel = tk.Label(self.root, text='Security', bg=self.bg_color)
+        self.securityLine = tk.Frame(self.root, height=1, width=self.windowWidth * 0.9, bg='black')
+        self.changePasswordBtn = tk.Button(self.root, text='Change password', command='')
+        self.changePasswordLabel = tk.Label(self.root, text='You can change your password here.', bg=self.bg_color)
+        self.changePinBtn = tk.Button(self.root, text='Change PIN', command='')
+        self.changePinLabel = tk.Label(self.root, text='You can change your PIN here.', bg=self.bg_color)
+
+        self.languageLabel = tk.Label(self.root, text='Language', bg=self.bg_color)
+        self.languageLine = tk.Frame(self.root, height=1, width=self.windowWidth * 0.9, bg='black')
+        self.changeLangDropdown = tk.OptionMenu(self.root, self.language, *('English', 'Polish'))
+        self.saveLanguageBtn = tk.Button(self.root, text='Save', command='')
+        self.changeLanguageLabel = tk.Label(self.root, text='You can select language here. Click \'Save\' to confirm.',
+                                            bg=self.bg_color)
+
         self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
         self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
+        print(self.language.get())
         self.place_widgets()
 
     def place_widgets(self):
         self.settingsLabel.place(relx=0, rely=0)
-        self.backBtn.place(relx=0.9, rely=0.85)
-        self.logoutBtn.place(relx=0, rely=0.05)
+        self.securityLabel.place(relx=0, rely=0.1)
+        self.securityLine.place(relx=0, rely=0.15)
+        self.changePasswordBtn.place(relx=0.01, rely=0.175, relwidth=0.175)
+        self.changePasswordLabel.place(relx=0.2, rely=0.175)
+        self.changePinBtn.place(relx=0.01, rely=0.225, relwidth=0.175)
+        self.changePinLabel.place(relx=0.2, rely=0.225)
+
+        self.languageLabel.place(relx=0, rely=0.35)
+        self.languageLine.place(relx=0, rely=0.4)
+        self.changeLangDropdown.place(relx=0.01, rely=0.425)
+        self.saveLanguageBtn.place(relx=0.125, rely=0.425, relwidth=0.1)
+        self.changeLanguageLabel.place(relx=0.25, rely=0.425)
+
+        self.backBtn.place(relx=0.9, rely=0.8)
+        self.logoutBtn.place(relx=0.01, rely=0.8, relwidth=0.225)
 
     def back_to_main(self):
         self.root.destroy()
@@ -369,7 +398,6 @@ class SettingsWindow(Window):
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
+            self.user = None
             self.root.destroy()
             start_window = StartWindow(self.dbm, self.mailm)
-
-            # TODO: figure out why statring window does not pop out after 2nd logging in
