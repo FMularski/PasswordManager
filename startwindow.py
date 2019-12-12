@@ -33,6 +33,7 @@ class StartWindow(Window):
         self.regBtn = tk.Button(self.root, text="Register", bg='white', command=self.register)
 
         self.place_widgets()
+        self.root.mainloop()
 
     def place_widgets(self):
         # log in widgets
@@ -57,6 +58,8 @@ class StartWindow(Window):
         self.regPinLabel.place(relx=0.6, rely=0.70)
         self.regPinEntry.place(relx=0.6, rely=0.75)
         self.regBtn.place(relx=0.6, rely=0.85)
+
+        self.root.mainloop()
 
     def register(self):
         login = self.regLogEntry.get()

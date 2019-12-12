@@ -19,9 +19,6 @@ class Window:
         self.titleLabel = tk.Label(self.root, text="Password Manager v1.0")
         self.titleLabel.pack()
 
-    def run(self):
-        self.root.mainloop()
-
     @classmethod
     def delete_entries(cls, *entries):
         for entry in entries:

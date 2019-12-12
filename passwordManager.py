@@ -9,11 +9,9 @@ dbm.setup_db()
 mailm = MailManager()
 
 startWindow = StartWindow(dbm, mailm)
-startWindow.run()
 
 try:
     mainWindow = MainWindow(dbm, mailm, startWindow.user)
-    mainWindow.run()
 except Exception as e:
     print(e)
 

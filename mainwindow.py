@@ -3,6 +3,7 @@ import tkinter as tk
 from accountformwindow import AccountFormWindow
 from tkinter import messagebox, filedialog, simpledialog
 from scrollframe import ScrollFrame
+from settingswindow import SettingsWindow
 
 
 class MainWindow(Window):
@@ -29,11 +30,12 @@ class MainWindow(Window):
         self.passwordLabel = tk.Label(self.scrollframe.viewPort, text='Password', bg=self.bg_color)
         self.separationLabel = tk.Label(self.scrollframe.viewPort, text=' ' * 40, bg=self.bg_color)
         self.addAccountBtn = tk.Button(self.root, text='+ Add Account', bg='#6bfc03', command=self.open_add_acc_form)
-        self.settingBtn = tk.Button(self.root, text='Settings', bg='#dedcd1', command=None)
+        self.settingBtn = tk.Button(self.root, text='Settings', bg='#dedcd1', command=self.open_settings)
         self.exportBtn = tk.Button(self.root, text='Export as txt', bg='#dedcd1', command=self.export)
 
         self.place_widgets()
         self.display_accounts()
+        self.root.mainloop()
 
     def place_widgets(self):
         self.userInfoLabel.place(relx=0, rely=0)
@@ -56,7 +58,7 @@ class MainWindow(Window):
         form_window = AccountFormWindow(self, mode='Add')
 
     def delete_account(self, acc_id):
-        if messagebox.askokcancel(title='Deleting account', message='Are you sure you want to delete this account?'):
+        if messagebox.askokcancel(title='Delete account', message='Are you sure you want to delete this account?'):
             self.dbm.delete('Accounts', 'id', acc_id)
             self.display_accounts()
 
@@ -146,13 +148,17 @@ class MainWindow(Window):
         self.toDisable.append(self.addAccountBtn)
 
     def export(self):
-        pin = simpledialog.askstring('Export accounts data', 'PIN:')
-
+        pin = simpledialog.askstring('Export data', 'PIN:')
         if not pin:
             messagebox.showwarning('Aborted', 'Export aborted.')
             return
 
-        if pin == self.user['pin']:
+        password = simpledialog.askstring('Export data', 'Password:')
+        if not password:
+            messagebox.showwarning('Aborted', 'Export aborted.')
+            return
+
+        if pin == self.user['pin'] and password == self.user['password']:
             path = filedialog.askdirectory()
             path += '/exported_accounts.txt'
 
@@ -166,11 +172,18 @@ class MainWindow(Window):
                         file.write(row)
                 messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
                                     'passwords. Be cautious when granting access to this file. Deleting the file from '
-                                    'widely available disk space is recommended. ')
+                                    'widely accessible disk space is recommended. ')
             except PermissionError:
                 pass
         else:
             messagebox.showerror('Error', 'Invalid PIN.')
+
+    def open_settings(self):
+        self.root.destroy()
+        settings_window = SettingsWindow(self.dbm, self.mailm, self.user, self)
+        settings_window.root.mainloop()
+
+
 
 
 
