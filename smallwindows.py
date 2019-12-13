@@ -1,10 +1,13 @@
 import tkinter as tk
 from tkinter import messagebox
-import pyautogui as pag
-import re
+
 from window import Window
+
 from mailmanager import MailManager
 from dbmanager import DbManager
+
+import pyautogui as pag
+import re
 
 
 class ForgetFormWindow(tk.Toplevel):
@@ -55,7 +58,7 @@ class ForgetFormWindow(tk.Toplevel):
 
         password = DbManager.get_column_value_where('Users', 'password', 'login', login)
 
-        if MailManager.send_mail(email, password, msg_type='password_request'):
+        if MailManager.send_mail(email, msg_type='password_request', data=password):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
                                                              'You will receive an email with your password.')
         Window.close_top_level(self, [self.btn])

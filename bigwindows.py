@@ -88,6 +88,11 @@ class StartWindow(Window):
                                   self.regEmailEntry, self.regPinEntry)
             return
 
+        if len(password) < 8:   # password minimum length
+            messagebox.showerror('Error', 'Password must be at least 8 characters long.')
+            Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
+            return
+
         if password != password_confirm:
             messagebox.showerror('Error', 'Password and password confirmation don\'t match.')
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
@@ -100,12 +105,21 @@ class StartWindow(Window):
                                   self.regEmailEntry, self.regPinEntry)
             return
 
-        DbManager.insert('Users', 'login, password, email, pin', (login, password, email, pin))
+        verification_code = random.randint(100000, 999999)
+        MailManager.send_mail(email, msg_type='thanks', data=login, data2=verification_code)
+        entered_code = simpledialog.askinteger('Email verification', 'Please verify your email by '
+                                               'entering the code\nthat has been sent to your email address.')
 
-        Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
-                              self.regEmailEntry, self.regPinEntry)
+        if entered_code != verification_code:
+            messagebox.showerror('Error', 'Invalid verification code.')
+            Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
+                                  self.regEmailEntry, self.regPinEntry)
+            return
 
-        MailManager.send_mail(email, login, msg_type='thanks')
+        if entered_code == verification_code:
+            DbManager.insert('Users', 'login, password, email, pin', (login, password, email, pin))
+            Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
+                                  self.regEmailEntry, self.regPinEntry)
 
     def login(self):
         login = self.logEntry.get()
@@ -136,7 +150,7 @@ class StartWindow(Window):
             'pin': DbManager.get_column_value_where('Users', 'pin', 'login', login)
         }
 
-        MailManager.send_mail(self.user['email'], login, 'alert')
+        MailManager.send_mail(self.user['email'], 'alert', data=login)
         self.root.destroy()
 
         main_window = MainWindow(self.user)
@@ -409,7 +423,7 @@ class SettingsWindow(Window):
 
     def change_security(self, mode):
         validation_code = random.randint(100000, 999999)
-        MailManager.send_mail(self.user['email'], validation_code, msg_type='security_change')
+        MailManager.send_mail(self.user['email'], msg_type='security_change', data=validation_code, data2=mode)
 
         entered_code = simpledialog.askinteger(f'Change {mode}', 'A validation code has been sent to your email.\n'
                                                                  f'Enter it below to proceed with {mode} changing.')
@@ -433,4 +447,4 @@ class SettingsWindow(Window):
             start_window = StartWindow()
 
 
-    #TODO: 1) forgot pin? feature 2) register veryfication code feature
+    #TODO: 1) forgot pin? feature
