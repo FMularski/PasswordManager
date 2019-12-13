@@ -3,10 +3,9 @@ import pyautogui as pag
 
 
 class Window:
-    def __init__(self, db_manager, mail_manager):
+    def __init__(self, db_manager):
         self.windowWidth, self.windowHeight = pag.size()
         self.dbm = db_manager
-        self.mailm = mail_manager
         self.user = None
 
         self.root = tk.Tk()

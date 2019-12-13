@@ -5,13 +5,14 @@ from smallwindows import ForgetFormWindow, AccountFormWindow, ChangeSecurityWind
 from window import Window
 from scrollframe import ScrollFrame
 
+from mailmanager import MailManager
 import re
 import random
 
 
 class StartWindow(Window):
-    def __init__(self, db_manager, mail_manager):
-        super().__init__(db_manager, mail_manager)
+    def __init__(self, db_manager):
+        super().__init__(db_manager)
 
         # log in widgets
         self.logInLabel = tk.Label(self.root, text="Log In", font="12", bg=self.bg_color)
@@ -102,7 +103,7 @@ class StartWindow(Window):
         Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
                               self.regEmailEntry, self.regPinEntry)
 
-        self.mailm.send_mail(email, login, msg_type='thanks')
+        MailManager.send_mail(email, login, msg_type='thanks')
 
     def login(self):
         login = self.logEntry.get()
@@ -133,20 +134,20 @@ class StartWindow(Window):
             'pin': self.dbm.get_column_value_where('Users', 'pin', 'login', login)
         }
 
-        self.mailm.send_mail(self.user['email'], login)
+        MailManager.send_mail(self.user['email'], login, 'alert')
         self.root.destroy()
 
-        main_window = MainWindow(self.dbm, self.mailm, self.user)
+        main_window = MainWindow(self.dbm, self.user)
         main_window.root.mainloop()
 
     def forgot_password(self):
         self.forgetBtn.config(state='disabled')
-        forgot_from = ForgetFormWindow(self.root, self.dbm, self.mailm, self.forgetBtn, self.bg_color)
+        forgot_from = ForgetFormWindow(self.root, self.dbm, self.forgetBtn, self.bg_color)
 
 
 class SettingsWindow(Window):
-    def __init__(self, dbm, mailm, user, main_window):
-        super().__init__(dbm, mailm)
+    def __init__(self, dbm, user, main_window):
+        super().__init__(dbm)
         self.user = user
         self.mainWindow = main_window
 
@@ -162,17 +163,17 @@ class SettingsWindow(Window):
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.dbm, self.mailm, self.user)
+        main_window = self.mainWindow.__init__(self.dbm, self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.root.destroy()
-            start_window = StartWindow(self.dbm, self.mailm)
+            start_window = StartWindow(self.dbm)
 
 
 class MainWindow(Window):
-    def __init__(self, dbm, mailm, user):
-        super().__init__(dbm, mailm)
+    def __init__(self, dbm, user):
+        super().__init__(dbm)
         self.user = user
         self.accountsRowsWidgets = []
         self.showButtons = []
@@ -343,13 +344,13 @@ class MainWindow(Window):
 
     def open_settings(self):
         self.root.destroy()
-        settings_window = SettingsWindow(self.dbm, self.mailm, self.user, self)
+        settings_window = SettingsWindow(self.dbm, self.user, self)
         settings_window.root.mainloop()
 
 
 class SettingsWindow(Window):
-    def __init__(self, dbm, mailm, user, main_window):
-        super().__init__(dbm, mailm)
+    def __init__(self, dbm, user, main_window):
+        super().__init__(dbm)
         self.user = user
         self.mainWindow = main_window
         self.toDisable = []
@@ -406,7 +407,7 @@ class SettingsWindow(Window):
 
     def change_security(self, mode):
         validation_code = random.randint(100000, 999999)
-        self.mailm.send_mail(self.user['email'], [mode, validation_code], msg_type='security_change')
+        MailManager.send_mail(self.user['email'], validation_code, msg_type='security_change')
 
         entered_code = simpledialog.askinteger(f'Change {mode}', 'A validation code has been sent to your email.\n'
                                                                  f'Enter it below to proceed with {mode} changing.')
@@ -421,10 +422,13 @@ class SettingsWindow(Window):
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.dbm, self.mailm, self.user)
+        main_window = self.mainWindow.__init__(self.dbm, self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.user = None
             self.root.destroy()
-            start_window = StartWindow(self.dbm, self.mailm)
+            start_window = StartWindow(self.dbm)
+
+
+    #TODO: 1) forgot pin? feature 2) register veryfication code feature 3) make dbmanager static?

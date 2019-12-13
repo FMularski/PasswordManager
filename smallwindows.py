@@ -3,14 +3,14 @@ from tkinter import messagebox
 import pyautogui as pag
 import re
 from window import Window
+from mailmanager import MailManager
 
 
 class ForgetFormWindow(tk.Toplevel):
-    def __init__(self, master, dbm, mailm, btn, bg_color):
+    def __init__(self, master, dbm, btn, bg_color):
         super().__init__(master)
         self.master = master
         self.dbm = dbm
-        self.mailm = mailm
         self.btn = btn
         self.width, self.height = pag.size()
 
@@ -55,7 +55,7 @@ class ForgetFormWindow(tk.Toplevel):
 
         password = self.dbm.get_column_value_where('Users', 'password', 'login', login)
 
-        if self.mailm.send_mail(email, password, msg_type='password_request'):
+        if MailManager.send_mail(email, password, msg_type='password_request'):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
                                                              'You will receive an email with your password.')
         Window.close_top_level(self, [self.btn])
@@ -210,7 +210,6 @@ class ChangeSecurityWindow(tk.Toplevel):
         super().__init__()
         self.master = master
         self.dbm = master.dbm
-        self.mailm = master.mailm
         self.user = master.user
         self.mode = mode
         self.bg_color = master.bg_color
