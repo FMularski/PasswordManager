@@ -24,6 +24,10 @@ class MailManager:
                       'Password Manager account. Please scroll down' + '.\n' * 50 + \
                       f'Password: {data}.\n\nAlways remember to ' \
                       f'keep your accounts safe!'
+            elif msg_type == 'security_change':
+                msg = f'Subject: Validation code.\n\nYou have requested a validation code in order to change your ' \
+                      f'{data[0]}. Please scroll down' + '.\n' * 50 + f'Validation code: {data[1]}.\n\n' \
+                                                                      f'Always remember to keep your accounts safe!'
             else:
                 msg = 'Invalid msg_type. Ignore this message.'
 

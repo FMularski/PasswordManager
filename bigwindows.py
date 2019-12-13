@@ -1,11 +1,12 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 
-from smallwindows import ForgetFormWindow, AccountFormWindow
+from smallwindows import ForgetFormWindow, AccountFormWindow, ChangeSecurityWindow
 from window import Window
 from scrollframe import ScrollFrame
 
 import re
+import random
 
 
 class StartWindow(Window):
@@ -231,7 +232,7 @@ class MainWindow(Window):
         form_window.load_account_data(acc_id)
 
     def check_pin(self, pin, btn):
-        if pin.get() != self.user['pin']:
+        if pin.get() != self.dbm.get_column_value_where('Users', 'pin', 'id', self.user['id']):
             messagebox.showerror('Error', 'Invalid PIN.')
             pin.delete(0, 'end')
             return
@@ -258,8 +259,6 @@ class MainWindow(Window):
         # widgets gets rid of the bug which caused show btn and pin entry to be left
         # after add/delete account
         self.accountsRowsWidgets.append({'show_btn': btn['btn'], 'pin_entry': pin_entry})
-
-        # TODO: 1) add comments
 
     def display_accounts(self):
         self.showButtons.clear()
@@ -313,15 +312,16 @@ class MainWindow(Window):
     def export(self):
         pin = simpledialog.askstring('Export data', 'PIN:')
         if not pin:
-            messagebox.showwarning('Aborted', 'Export aborted.')
+            messagebox.showwarning('Cancelled', 'Export cancelled.')
             return
 
         password = simpledialog.askstring('Export data', 'Password:')
         if not password:
-            messagebox.showwarning('Aborted', 'Export aborted.')
+            messagebox.showwarning('Cancelled', 'Export cancelled.')
             return
 
-        if pin == self.user['pin'] and password == self.user['password']:
+        if pin == self.dbm.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
+                and password == self.dbm.get_column_value_where('Users', 'password', 'id', self.user['id']):
             path = filedialog.askdirectory()
             path += '/exported_accounts.txt'
 
@@ -352,14 +352,18 @@ class SettingsWindow(Window):
         super().__init__(dbm, mailm)
         self.user = user
         self.mainWindow = main_window
+        self.toDisable = []
+        self.children = []  # adding this field removes bug: closing 'X' settings_window after
+        # closing security_change_window
 
         self.settingsLabel = tk.Label(self.root, text='Settings', bg=self.bg_color, font=10)
 
         self.securityLabel = tk.Label(self.root, text='Security', bg=self.bg_color)
         self.securityLine = tk.Frame(self.root, height=1, width=self.windowWidth * 0.9, bg='black')
-        self.changePasswordBtn = tk.Button(self.root, text='Change password', command='')
+        self.changePasswordBtn = tk.Button(self.root, text='Change password',
+                                           command=lambda: self.change_security('password'))
         self.changePasswordLabel = tk.Label(self.root, text='You can change your password here.', bg=self.bg_color)
-        self.changePinBtn = tk.Button(self.root, text='Change PIN', command='')
+        self.changePinBtn = tk.Button(self.root, text='Change PIN', command=lambda: self.change_security('PIN'))
         self.changePinLabel = tk.Label(self.root, text='You can change your PIN here.', bg=self.bg_color)
 
         self.languageLabel = tk.Label(self.root, text='Language', bg=self.bg_color)
@@ -371,6 +375,10 @@ class SettingsWindow(Window):
 
         self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
         self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
+
+        self.toDisable = [self.changePasswordBtn, self.changePinBtn, self.saveLanguageBtn, self.logoutBtn,
+                          self.backBtn, self.changeLangDropdown]
+
         print(self.language.get())
         self.place_widgets()
 
@@ -391,6 +399,25 @@ class SettingsWindow(Window):
 
         self.backBtn.place(relx=0.9, rely=0.8)
         self.logoutBtn.place(relx=0.01, rely=0.8, relwidth=0.225)
+
+    def disable_buttons(self):
+        for btn in self.toDisable:
+            btn.config(state='disabled')
+
+    def change_security(self, mode):
+        validation_code = random.randint(100000, 999999)
+        self.mailm.send_mail(self.user['email'], [mode, validation_code], msg_type='security_change')
+
+        entered_code = simpledialog.askinteger(f'Change {mode}', 'A validation code has been sent to your email.\n'
+                                                                 f'Enter it below to proceed with {mode} changing.')
+        if not validation_code:
+            messagebox.showerror('Error', f'{mode} change cancelled.')
+
+        if validation_code == entered_code:
+            self.disable_buttons()
+            change_security_window = ChangeSecurityWindow(self, mode)
+        else:
+            messagebox.showerror('Error', 'Invalid validation code.')
 
     def back_to_main(self):
         self.root.destroy()
