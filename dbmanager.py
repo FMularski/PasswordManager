@@ -3,43 +3,39 @@ from tkinter import messagebox
 
 
 class DbManager:
-    def __init__(self, db):
+    conn = sqlite3.connect('pass_manager.db')
+
+    @classmethod
+    def initialize(cls):
         try:
-            self.conn = sqlite3.connect(db)
+            create_table_users_query = """
+                        CREATE TABLE IF NOT EXISTS Users(
+                        id integer PRIMARY KEY AUTOINCREMENT,
+                        login text NOT NULL,
+                        email text NOT NULL,
+                        pin text NOT NULL,
+                        password text NOT NULL
+                        );"""
+
+            create_table_accounts_query = """
+                            CREATE TABLE IF NOT EXISTS Accounts(
+                            id integer PRIMARY KEY AUTOINCREMENT,
+                            title text NOT NULL,
+                            login text,
+                            associated_email text,
+                            password text NOT NULL,
+                            user_id integer NOT NULL,
+                            FOREIGN KEY (user_id) REFERENCES Users(id)
+                            );"""
+            cls.conn.execute(create_table_users_query)
+            cls.conn.execute(create_table_accounts_query)
+            cls.conn.commit()
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
 
-    def setup_db(self):
-        create_table_users_query = """
-            CREATE TABLE IF NOT EXISTS Users(
-            id integer PRIMARY KEY AUTOINCREMENT,
-            login text NOT NULL,
-            email text NOT NULL,
-            pin text NOT NULL,
-            password text NOT NULL
-            );"""
-
-        create_table_accounts_query = """
-                CREATE TABLE IF NOT EXISTS Accounts(
-                id integer PRIMARY KEY AUTOINCREMENT,
-                title text NOT NULL,
-                login text,
-                associated_email text,
-                password text NOT NULL,
-                user_id integer NOT NULL,
-                FOREIGN KEY (user_id) REFERENCES Users(id)
-                );"""
-
-        try:
-            self.conn.execute(create_table_users_query)
-            self.conn.execute(create_table_accounts_query)
-            self.conn.commit()
-
-        except sqlite3.Error as e:
-            messagebox.showerror('Error', e)
-
-    def get_column_values(self, table, column):
-        cursor = self.conn.cursor()
+    @classmethod
+    def get_column_values(cls, table, column):
+        cursor = cls.conn.cursor()
         try:
             cursor.execute(f'SELECT {column} FROM {table}')
 
@@ -53,13 +49,14 @@ class DbManager:
             messagebox.showerror('Error', e)
             return []
 
-    def insert(self, table, columns, values):
+    @classmethod
+    def insert(cls, table, columns, values):
         try:
             values_question_marks = '?, ' * len(values)  # generates ?, ?, ?, ?, for the query
 
             insert_query = f'INSERT INTO {table} ({columns}) VALUES({values_question_marks[0:-2]})'  # -2 cuts ', '
-            self.conn.execute(insert_query, values)
-            self.conn.commit()
+            cls.conn.execute(insert_query, values)
+            cls.conn.commit()
 
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
@@ -67,30 +64,33 @@ class DbManager:
 
         messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
 
-    def update(self, table, column, new_value, where_column, where_column_value):
+    @classmethod
+    def update(cls, table, column, new_value, where_column, where_column_value):
         try:
             update_query = f'UPDATE {table} SET {column} = ? WHERE {where_column} = ?'
-            self.conn.execute(update_query, (new_value, where_column_value,))
-            self.conn.commit()
+            cls.conn.execute(update_query, (new_value, where_column_value,))
+            cls.conn.commit()
 
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return
 
-    def get_column_value_where(self, table, column, where_col, value):
+    @classmethod
+    def get_column_value_where(cls, table, column, where_col, value):
         query = f'SELECT {column} FROM {table} WHERE {where_col} = ?'
         try:
-            cursor = self.conn.cursor()
+            cursor = cls.conn.cursor()
             cursor.execute(query, (value,))
             return cursor.fetchone()[0]
         except sqlite3.Error as e:
             messagebox.showerror('Error', e)
             return
 
-    def get_user_accounts(self, user_id):
+    @classmethod
+    def get_user_accounts(cls, user_id):
         query = f'SELECT id, title, login, associated_email, password FROM Accounts WHERE user_id = ?'
         try:
-            cursor = self.conn.cursor()
+            cursor = cls.conn.cursor()
             cursor.execute(query, (user_id,))
 
             accounts = list()
@@ -104,9 +104,10 @@ class DbManager:
             messagebox.showerror('Error', e)
             return []
 
-    def delete(self, table, column, value):
-        self.conn.execute(f'DELETE FROM {table} WHERE {column} = {value}')
-        self.conn.commit()
+    @classmethod
+    def delete(cls, table, column, value):
+        cls.conn.execute(f'DELETE FROM {table} WHERE {column} = {value}')
+        cls.conn.commit()
 
 
 

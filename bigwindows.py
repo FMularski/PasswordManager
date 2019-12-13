@@ -6,13 +6,15 @@ from window import Window
 from scrollframe import ScrollFrame
 
 from mailmanager import MailManager
+from dbmanager import DbManager
+
 import re
 import random
 
 
 class StartWindow(Window):
-    def __init__(self, db_manager):
-        super().__init__(db_manager)
+    def __init__(self):
+        super().__init__()
 
         # log in widgets
         self.logInLabel = tk.Label(self.root, text="Log In", font="12", bg=self.bg_color)
@@ -78,7 +80,7 @@ class StartWindow(Window):
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
             return
 
-        login_in_db = self.dbm.get_column_values('Users', 'login')
+        login_in_db = DbManager.get_column_values('Users', 'login')
 
         if login in login_in_db:
             messagebox.showerror('Error', f'Login \'{login}\' is already used.')
@@ -98,7 +100,7 @@ class StartWindow(Window):
                                   self.regEmailEntry, self.regPinEntry)
             return
 
-        self.dbm.insert('Users', 'login, password, email, pin', (login, password, email, pin))
+        DbManager.insert('Users', 'login, password, email, pin', (login, password, email, pin))
 
         Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
                               self.regEmailEntry, self.regPinEntry)
@@ -114,40 +116,40 @@ class StartWindow(Window):
             Window.delete_entries(self.passwordEntry)
             return
 
-        log_in_db = self.dbm.get_column_values('Users', 'login')
+        log_in_db = DbManager.get_column_values('Users', 'login')
 
         if login not in log_in_db:
             messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
             Window.delete_entries(self.logEntry, self.passwordEntry)
             return
 
-        if password != self.dbm.get_column_value_where('Users', 'password', 'login', login):
+        if password != DbManager.get_column_value_where('Users', 'password', 'login', login):
             messagebox.showerror('Error', 'Entered password is not correct.')
             Window.delete_entries(self.passwordEntry)
             return
 
         self.user = {
-            'id': self.dbm.get_column_value_where('Users', 'id', 'login', login),
+            'id': DbManager.get_column_value_where('Users', 'id', 'login', login),
             'login': login,
             'password': password,
-            'email': self.dbm.get_column_value_where('Users', 'email', 'login', login),
-            'pin': self.dbm.get_column_value_where('Users', 'pin', 'login', login)
+            'email': DbManager.get_column_value_where('Users', 'email', 'login', login),
+            'pin': DbManager.get_column_value_where('Users', 'pin', 'login', login)
         }
 
         MailManager.send_mail(self.user['email'], login, 'alert')
         self.root.destroy()
 
-        main_window = MainWindow(self.dbm, self.user)
+        main_window = MainWindow(self.user)
         main_window.root.mainloop()
 
     def forgot_password(self):
         self.forgetBtn.config(state='disabled')
-        forgot_from = ForgetFormWindow(self.root, self.dbm, self.forgetBtn, self.bg_color)
+        forgot_from = ForgetFormWindow(self.root, self.forgetBtn, self.bg_color)
 
 
 class SettingsWindow(Window):
-    def __init__(self, dbm, user, main_window):
-        super().__init__(dbm)
+    def __init__(self, user, main_window):
+        super().__init__()
         self.user = user
         self.mainWindow = main_window
 
@@ -163,17 +165,17 @@ class SettingsWindow(Window):
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.dbm, self.user)
+        main_window = self.mainWindow.__init__(self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.root.destroy()
-            start_window = StartWindow(self.dbm)
+            start_window = StartWindow()
 
 
 class MainWindow(Window):
-    def __init__(self, dbm, user):
-        super().__init__(dbm)
+    def __init__(self, user):
+        super().__init__()
         self.user = user
         self.accountsRowsWidgets = []
         self.showButtons = []
@@ -224,7 +226,7 @@ class MainWindow(Window):
 
     def delete_account(self, acc_id):
         if messagebox.askokcancel(title='Delete account', message='Are you sure you want to delete this account?'):
-            self.dbm.delete('Accounts', 'id', acc_id)
+            DbManager.delete('Accounts', 'id', acc_id)
             self.display_accounts()
 
     def edit_account(self, acc_id):
@@ -233,7 +235,7 @@ class MainWindow(Window):
         form_window.load_account_data(acc_id)
 
     def check_pin(self, pin, btn):
-        if pin.get() != self.dbm.get_column_value_where('Users', 'pin', 'id', self.user['id']):
+        if pin.get() != DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']):
             messagebox.showerror('Error', 'Invalid PIN.')
             pin.delete(0, 'end')
             return
@@ -241,7 +243,7 @@ class MainWindow(Window):
         pin.destroy()
 
         password = tk.Label(self.scrollframe.viewPort,
-                            text=self.dbm.get_column_value_where('Accounts', 'password', 'id', btn['acc_id']),
+                            text=DbManager.get_column_value_where('Accounts', 'password', 'id', btn['acc_id']),
                             bg=self.bg_color)
         password.grid(row=btn['y'], column=3)
 
@@ -269,7 +271,7 @@ class MainWindow(Window):
                 widget.destroy()
 
         self.accountsRowsWidgets.clear()
-        accounts = self.dbm.get_user_accounts(self.user['id'])
+        accounts = DbManager.get_user_accounts(self.user['id'])
 
         for i in range(len(accounts)):
             title = tk.Label(self.scrollframe.viewPort, text=accounts[i]['title'], bg=self.bg_color)
@@ -321,12 +323,12 @@ class MainWindow(Window):
             messagebox.showwarning('Cancelled', 'Export cancelled.')
             return
 
-        if pin == self.dbm.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
-                and password == self.dbm.get_column_value_where('Users', 'password', 'id', self.user['id']):
+        if pin == DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
+                and password == DbManager.get_column_value_where('Users', 'password', 'id', self.user['id']):
             path = filedialog.askdirectory()
             path += '/exported_accounts.txt'
 
-            accounts = self.dbm.get_user_accounts(self.user['id'])
+            accounts = DbManager.get_user_accounts(self.user['id'])
 
             try:
                 with open(path, 'w') as file:
@@ -344,13 +346,13 @@ class MainWindow(Window):
 
     def open_settings(self):
         self.root.destroy()
-        settings_window = SettingsWindow(self.dbm, self.user, self)
+        settings_window = SettingsWindow(self.user, self)
         settings_window.root.mainloop()
 
 
 class SettingsWindow(Window):
-    def __init__(self, dbm, user, main_window):
-        super().__init__(dbm)
+    def __init__(self, user, main_window):
+        super().__init__()
         self.user = user
         self.mainWindow = main_window
         self.toDisable = []
@@ -422,13 +424,13 @@ class SettingsWindow(Window):
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.dbm, self.user)
+        main_window = self.mainWindow.__init__(self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.user = None
             self.root.destroy()
-            start_window = StartWindow(self.dbm)
+            start_window = StartWindow()
 
 
-    #TODO: 1) forgot pin? feature 2) register veryfication code feature 3) make dbmanager static?
+    #TODO: 1) forgot pin? feature 2) register veryfication code feature

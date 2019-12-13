@@ -3,9 +3,8 @@ import pyautogui as pag
 
 
 class Window:
-    def __init__(self, db_manager):
+    def __init__(self):
         self.windowWidth, self.windowHeight = pag.size()
-        self.dbm = db_manager
         self.user = None
 
         self.root = tk.Tk()

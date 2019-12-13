@@ -4,13 +4,13 @@ import pyautogui as pag
 import re
 from window import Window
 from mailmanager import MailManager
+from dbmanager import DbManager
 
 
 class ForgetFormWindow(tk.Toplevel):
-    def __init__(self, master, dbm, btn, bg_color):
+    def __init__(self, master, btn, bg_color):
         super().__init__(master)
         self.master = master
-        self.dbm = dbm
         self.btn = btn
         self.width, self.height = pag.size()
 
@@ -43,17 +43,17 @@ class ForgetFormWindow(tk.Toplevel):
             messagebox.showerror('Error', 'Please fill all entries.')
             return
 
-        log_in_db = self.dbm.get_column_values('Users', 'login')
+        log_in_db = DbManager.get_column_values('Users', 'login')
 
         if login not in log_in_db:
             messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
             return
 
-        if email != self.dbm.get_column_value_where('Users', 'email', 'login', login):
+        if email != DbManager.get_column_value_where('Users', 'email', 'login', login):
             messagebox.showerror('Error', f'Email \'{email}\' does not match the entered login.')
             return
 
-        password = self.dbm.get_column_value_where('Users', 'password', 'login', login)
+        password = DbManager.get_column_value_where('Users', 'password', 'login', login)
 
         if MailManager.send_mail(email, password, msg_type='password_request'):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
@@ -65,7 +65,6 @@ class AccountFormWindow(tk.Toplevel):
     def __init__(self, master, mode):
         super().__init__(master.root)
         self.user = master.user
-        self.dbm = master.dbm
         self.mode = mode
         self.toDisable = master.toDisable
         self.accId = None
@@ -104,13 +103,12 @@ class AccountFormWindow(tk.Toplevel):
         self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.toDisable))
 
     def load_account_data(self, acc_id):
-        self.accTitleEntry.insert(0, self.dbm.get_column_value_where('Accounts', 'title', 'id', acc_id))
-        self.loginEntry.insert(0, self.dbm.get_column_value_where('Accounts', 'login', 'id', acc_id))
+        self.accTitleEntry.insert(0, DbManager.get_column_value_where('Accounts', 'title', 'id', acc_id))
+        self.loginEntry.insert(0, DbManager.get_column_value_where('Accounts', 'login', 'id', acc_id))
         self.associatedEmailEntry.insert(0,
-                                         self.dbm.get_column_value_where('Accounts', 'associated_email', 'id', acc_id))
-        self.passwordEntry.insert(0, self.dbm.get_column_value_where('Accounts', 'password', 'id', acc_id))
-        self.passwordConfirmEntry.insert(0,
-                                         self.dbm.get_column_value_where('Accounts', 'password', 'id', acc_id))
+                                         DbManager.get_column_value_where('Accounts', 'associated_email', 'id', acc_id))
+        self.passwordEntry.insert(0, DbManager.get_column_value_where('Accounts', 'password', 'id', acc_id))
+        self.passwordConfirmEntry.insert(0, DbManager.get_column_value_where('Accounts', 'password', 'id', acc_id))
         self.accId = acc_id
 
     def place_widgets(self):
@@ -143,8 +141,8 @@ class AccountFormWindow(tk.Toplevel):
             associated_email = validation_result[2]
             password = validation_result[3]
 
-            user_id = self.dbm.get_column_value_where('Users', 'id', 'login', self.user['login'])
-            self.dbm.insert('Accounts', 'title, login, associated_email, password, user_id',
+            user_id = DbManager.get_column_value_where('Users', 'id', 'login', self.user['login'])
+            DbManager.insert('Accounts', 'title, login, associated_email, password, user_id',
                             (title, login, associated_email, password, user_id))
 
             self.refreshAccountListMethod()
@@ -159,10 +157,10 @@ class AccountFormWindow(tk.Toplevel):
             associated_email = validation_result[2]
             password = validation_result[3]
 
-            self.dbm.update('Accounts', 'title', title, 'id', self.accId)
-            self.dbm.update('Accounts', 'login', login, 'id', self.accId)
-            self.dbm.update('Accounts', 'associated_email', associated_email, 'id', self.accId)
-            self.dbm.update('Accounts', 'password', password, 'id', self.accId)
+            DbManager.update('Accounts', 'title', title, 'id', self.accId)
+            DbManager.update('Accounts', 'login', login, 'id', self.accId)
+            DbManager.update('Accounts', 'associated_email', associated_email, 'id', self.accId)
+            DbManager.update('Accounts', 'password', password, 'id', self.accId)
 
             self.refreshAccountListMethod()
             Window.close_top_level(self, self.toDisable)
@@ -197,7 +195,7 @@ class AccountFormWindow(tk.Toplevel):
                 messagebox.showerror('Error', 'Invalid email.')
                 return None
 
-        if self.mode == 'Edit' and pin != self.dbm.get_column_value_where('Users', 'pin', 'id', self.user['id']):
+        if self.mode == 'Edit' and pin != DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']):
             Window.delete_entries(self.pinEntry)
             messagebox.showerror('Error', 'Invalid PIN.')
             return None
@@ -209,7 +207,6 @@ class ChangeSecurityWindow(tk.Toplevel):
     def __init__(self, master, mode):
         super().__init__()
         self.master = master
-        self.dbm = master.dbm
         self.user = master.user
         self.mode = mode
         self.bg_color = master.bg_color
@@ -251,7 +248,7 @@ class ChangeSecurityWindow(tk.Toplevel):
             Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
             return
 
-        if old_security != self.dbm.get_column_value_where('Users', self.mode, 'id', self.user["id"]):
+        if old_security != DbManager.get_column_value_where('Users', self.mode, 'id', self.user["id"]):
             messagebox.showerror('Error', 'Invalid old PIN.')
             Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
             return
@@ -261,7 +258,7 @@ class ChangeSecurityWindow(tk.Toplevel):
             Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
             return
 
-        self.dbm.update('Users', self.mode, new_security, 'id', self.user['id'])    # mode is pwd or pin
+        DbManager.update('Users', self.mode, new_security, 'id', self.user['id'])    # mode is pwd or pin
         messagebox.showinfo('Success', f'Your {self.mode} has been successfully changed.\nRemember not to share it '
                                        'with anyone else.')
         self.master.user[self.mode] = new_security     # update user
