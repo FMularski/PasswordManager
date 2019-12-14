@@ -382,6 +382,9 @@ class SettingsWindow(Window):
         self.changePasswordLabel = tk.Label(self.root, text='You can change your password here.', bg=self.bg_color)
         self.changePinBtn = tk.Button(self.root, text='Change PIN', command=lambda: self.change_security('PIN'))
         self.changePinLabel = tk.Label(self.root, text='You can change your PIN here.', bg=self.bg_color)
+        self.forgotPinBtn = tk.Button(self.root, text='Forgot PIN?', command=self.reset_pin)
+        self.forgotPinLabel = tk.Label(self.root, text='If you forgot your PIN you can request a reminder here.',
+                                       bg=self.bg_color)
 
         self.languageLabel = tk.Label(self.root, text='Language', bg=self.bg_color)
         self.languageLine = tk.Frame(self.root, height=1, width=self.windowWidth * 0.9, bg='black')
@@ -407,6 +410,8 @@ class SettingsWindow(Window):
         self.changePasswordLabel.place(relx=0.2, rely=0.175)
         self.changePinBtn.place(relx=0.01, rely=0.225, relwidth=0.175)
         self.changePinLabel.place(relx=0.2, rely=0.225)
+        self.forgotPinBtn.place(relx=0.01, rely=0.275, relwidth=0.175)
+        self.forgotPinLabel.place(relx=0.2, rely=0.275)
 
         self.languageLabel.place(relx=0, rely=0.35)
         self.languageLine.place(relx=0, rely=0.4)
@@ -436,6 +441,26 @@ class SettingsWindow(Window):
         else:
             messagebox.showerror('Error', 'Invalid validation code.')
 
+    def reset_pin(self):
+        verification_code = random.randint(100000, 999999)
+        MailManager.send_mail(self.user['email'], msg_type='security_change', data=verification_code, data2='PIN')
+
+        entered_code = simpledialog.askinteger('Reset PIN', 'You will be able to reset your PIN\n'
+                                                            'after entering the verification code\n'
+                                                            'which has been sent to your email.')
+        if entered_code != verification_code:
+            messagebox.showerror('Error', 'Invalid verification PIN.')
+            return
+
+        new_pin = simpledialog.askstring('Reset PIN', 'Enter a new PIN:')
+        if not new_pin:
+            messagebox.showerror('Error', 'Invalid input.')
+            return
+
+        DbManager.update('Users', 'pin', new_pin, 'id', self.user['id'])
+        self.user['pin'] = new_pin
+        messagebox.showinfo('Success', 'Your new PIN has been successfully set.')
+
     def back_to_main(self):
         self.root.destroy()
         main_window = self.mainWindow.__init__(self.user)
@@ -446,5 +471,5 @@ class SettingsWindow(Window):
             self.root.destroy()
             start_window = StartWindow()
 
-
-    #TODO: 1) forgot pin? feature
+    # TODO: 1) change export pin + password for verification code
+    #  2) in reset pin change simpledialog for custom tk window

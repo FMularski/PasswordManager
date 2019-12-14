@@ -256,6 +256,12 @@ class ChangeSecurityWindow(tk.Toplevel):
             Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
             return
 
+        if self.mode == 'password':
+            if len(new_security) < 8: # minimum password length
+                messagebox.showerror('Error', 'Password must be at least 8 characters long.')
+                Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
+                return
+
         if new_security != confirm_security:
             messagebox.showerror('Error', '\'New password\' and \'Confirm password\' entries don\'t match.')
             Window.delete_entries(self.oldSecurityEntry, self.newSecurityEntry, self.confirmSecurityEntry)
