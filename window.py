@@ -11,8 +11,8 @@ class Window:
         self.root = tk.Tk()
         self.root.title('Password Manager')
 
-        self.language = tk.StringVar(self.root)
-        self.language.set('English')
+        self.setLanguage = tk.StringVar(self.root)
+        self.setLanguage.set(self.language)
 
         self.bg_color = '#fff8ad'
 

@@ -16,9 +16,8 @@ from languagepack import lp
 class StartWindow(Window):
     def __init__(self, language):
         super().__init__(language)
-
         # log in widgets
-        self.logInLabel = tk.Label(self.root, text=lp['English']['login_label'], font="12", bg=self.bg_color)
+        self.logInLabel = tk.Label(self.root, text=lp[self.language]['login_label'], font="12", bg=self.bg_color)
         self.logLabel = tk.Label(self.root, text="Login:", bg=self.bg_color)
         self.logEntry = tk.Entry(self.root, width=25)
         self.passwordLabel = tk.Label(self.root, text="Password:", bg=self.bg_color)
@@ -163,30 +162,30 @@ class StartWindow(Window):
                                       self.forgetBtn, self.regBtn], self.bg_color, self.language)
 
 
-class SettingsWindow(Window):
-    def __init__(self, language, user, main_window):
-        super().__init__(language)
-        self.user = user
-        self.mainWindow = main_window
-
-        self.settingsLabel = tk.Label(self.root, text='Settings', bg=self.bg_color, font=10)
-        self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
-        self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
-        self.place_widgets()
-
-    def place_widgets(self):
-        self.settingsLabel.place(relx=0, rely=0)
-        self.backBtn.place(relx=0.9, rely=0.85)
-        self.logoutBtn.place(relx=0, rely=0.05)
-
-    def back_to_main(self):
-        self.root.destroy()
-        main_window = self.mainWindow.__init__(self.language, self.user)
-
-    def log_out(self):
-        if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
-            self.root.destroy()
-            start_window = StartWindow(self.language)
+# class SettingsWindow(Window):
+#     def __init__(self, language, user, main_window):
+#         super().__init__(language)
+#         self.user = user
+#         self.mainWindow = main_window
+#
+#         self.settingsLabel = tk.Label(self.root, text='Settings', bg=self.bg_color, font=10)
+#         self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
+#         self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
+#         self.place_widgets()
+#
+#     def place_widgets(self):
+#         self.settingsLabel.place(relx=0, rely=0)
+#         self.backBtn.place(relx=0.9, rely=0.85)
+#         self.logoutBtn.place(relx=0, rely=0.05)
+#
+#     def back_to_main(self):
+#         self.root.destroy()
+#         main_window = self.mainWindow.__init__(self.language, self.user)
+#
+#     def log_out(self):
+#         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
+#             self.root.destroy()
+#             start_window = StartWindow(self.language)
 
 
 class MainWindow(Window):
@@ -363,7 +362,8 @@ class SettingsWindow(Window):
 
         self.languageLabel = tk.Label(self.root, text='Language', bg=self.bg_color)
         self.languageLine = tk.Frame(self.root, height=1, width=self.windowWidth * 0.9, bg='black')
-        self.changeLangDropdown = tk.OptionMenu(self.root, self.language, *('English', 'Polish'))
+        self.changeLangDropdown = tk.OptionMenu(self.root, tk.StringVar(self.root, self.language),
+                                                *('English', 'Polish'))
         self.saveLanguageBtn = tk.Button(self.root, text='Save', command='')
         self.changeLanguageLabel = tk.Label(self.root, text='You can select language here. Click \'Save\' to confirm.',
                                             bg=self.bg_color)
@@ -374,7 +374,6 @@ class SettingsWindow(Window):
         self.toDisable = [self.changePasswordBtn, self.changePinBtn, self.forgotPinBtn,
                           self.saveLanguageBtn, self.logoutBtn, self.backBtn, self.changeLangDropdown]
 
-        print(self.language.get())
         self.place_widgets()
 
     def place_widgets(self):
