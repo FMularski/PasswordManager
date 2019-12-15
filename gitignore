@@ -1,8 +1,8 @@
 # password for MailManager
-emailpass.py
+/emailpass.py
 
 # db file
-pass_manager.db
+/pass_manager.db
 
 # cloned from github
-scrollframe.py
+/scrollframe.py

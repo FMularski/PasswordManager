@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox, filedialog, simpledialog
 
-from smallwindows import ForgetFormWindow, AccountFormWindow, ChangeSecurityWindow
+from smallwindows import AskValuesWindow, AccountFormWindow, ChangeSecurityWindow
 from window import Window
 from scrollframe import ScrollFrame
 
@@ -158,7 +158,8 @@ class StartWindow(Window):
 
     def forgot_password(self):
         self.forgetBtn.config(state='disabled')
-        forgot_from = ForgetFormWindow(self.root, self.forgetBtn, self.bg_color)
+        forgot_from = AskValuesWindow(self.root, 'Forgot password?', ['Login', 'Email'], [self.logInBtn,
+                                      self.forgetBtn, self.regBtn], self.bg_color)
 
 
 class SettingsWindow(Window):
@@ -212,7 +213,7 @@ class MainWindow(Window):
         self.separationLabel = tk.Label(self.scrollframe.viewPort, text=' ' * 40, bg=self.bg_color)
         self.addAccountBtn = tk.Button(self.root, text='+ Add Account', bg='#6bfc03', command=self.open_add_acc_form)
         self.settingBtn = tk.Button(self.root, text='Settings', bg='#dedcd1', command=self.open_settings)
-        self.exportBtn = tk.Button(self.root, text='Export as txt', bg='#dedcd1', command=self.export)
+        self.exportBtn = tk.Button(self.root, text='Export as txt', bg='#dedcd1', command=self.open_window_to_export)
 
         self.place_widgets()
         self.display_accounts()
@@ -326,37 +327,9 @@ class MainWindow(Window):
 
         self.toDisable.append(self.addAccountBtn)
 
-    def export(self):
-        pin = simpledialog.askstring('Export data', 'PIN:')
-        if not pin:
-            messagebox.showwarning('Cancelled', 'Export cancelled.')
-            return
-
-        password = simpledialog.askstring('Export data', 'Password:')
-        if not password:
-            messagebox.showwarning('Cancelled', 'Export cancelled.')
-            return
-
-        if pin == DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
-                and password == DbManager.get_column_value_where('Users', 'password', 'id', self.user['id']):
-            path = filedialog.askdirectory()
-            path += '/exported_accounts.txt'
-
-            accounts = DbManager.get_user_accounts(self.user['id'])
-
-            try:
-                with open(path, 'w') as file:
-                    for account in accounts:
-                        row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' +\
-                            account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
-                        file.write(row)
-                messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
-                                    'passwords. Be cautious when granting access to this file. Deleting the file from '
-                                    'widely accessible disk space is recommended. ')
-            except PermissionError:
-                pass
-        else:
-            messagebox.showerror('Error', 'Invalid PIN.')
+    def open_window_to_export(self):
+        exportSecurityCheckWindow = AskValuesWindow(self.root, 'Export data', ['PIN', 'Password'], self.user,
+                                                    self.toDisable + [self.exportBtn, self.settingBtn], self.bg_color)
 
     def open_settings(self):
         self.root.destroy()
@@ -396,8 +369,8 @@ class SettingsWindow(Window):
         self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
         self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
 
-        self.toDisable = [self.changePasswordBtn, self.changePinBtn, self.saveLanguageBtn, self.logoutBtn,
-                          self.backBtn, self.changeLangDropdown]
+        self.toDisable = [self.changePasswordBtn, self.changePinBtn, self.forgotPinBtn,
+                          self.saveLanguageBtn, self.logoutBtn, self.backBtn, self.changeLangDropdown]
 
         print(self.language.get())
         self.place_widgets()
@@ -428,6 +401,7 @@ class SettingsWindow(Window):
 
     def change_security(self, mode):
         validation_code = random.randint(100000, 999999)
+        print(validation_code)
         MailManager.send_mail(self.user['email'], msg_type='security_change', data=validation_code, data2=mode)
 
         entered_code = simpledialog.askinteger(f'Change {mode}', 'A validation code has been sent to your email.\n'
@@ -443,6 +417,7 @@ class SettingsWindow(Window):
 
     def reset_pin(self):
         verification_code = random.randint(100000, 999999)
+        print(verification_code)
         MailManager.send_mail(self.user['email'], msg_type='security_change', data=verification_code, data2='PIN')
 
         entered_code = simpledialog.askinteger('Reset PIN', 'You will be able to reset your PIN\n'
@@ -452,14 +427,8 @@ class SettingsWindow(Window):
             messagebox.showerror('Error', 'Invalid verification PIN.')
             return
 
-        new_pin = simpledialog.askstring('Reset PIN', 'Enter a new PIN:')
-        if not new_pin:
-            messagebox.showerror('Error', 'Invalid input.')
-            return
-
-        DbManager.update('Users', 'pin', new_pin, 'id', self.user['id'])
-        self.user['pin'] = new_pin
-        messagebox.showinfo('Success', 'Your new PIN has been successfully set.')
+        reset_pin_window = AskValuesWindow(self.root, 'Reset PIN', ['New PIN', 'Confirm new PIN'],
+                                           self.user, self.toDisable, self.bg_color)
 
     def back_to_main(self):
         self.root.destroy()
@@ -470,6 +439,3 @@ class SettingsWindow(Window):
             self.user = None
             self.root.destroy()
             start_window = StartWindow()
-
-    # TODO: 1) change export pin + password for verification code
-    #  2) in reset pin change simpledialog for custom tk window

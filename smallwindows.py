@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog, simpledialog
 
 from window import Window
 
@@ -8,39 +8,52 @@ from dbmanager import DbManager
 
 import pyautogui as pag
 import re
+import random
 
 
-class ForgetFormWindow(tk.Toplevel):
-    def __init__(self, master, btn, bg_color):
+class AskValuesWindow(tk.Toplevel):
+    def __init__(self, master, title, entries, user, btns_to_disable, bg_color):
         super().__init__(master)
         self.master = master
-        self.btn = btn
         self.width, self.height = pag.size()
+        self.widgetsForEntries = []
+        self.btnsToDisable = btns_to_disable
+        self.user = user
+        self.jobs = {'Forgot password?': self.remind_password,
+                     'Export data': self.export,
+                     'Reset PIN': self.reset_pin
+                     }
 
         self.canvas = tk.Canvas(self, width=self.width / 5, height=self.height / 5, bg=bg_color)
-        self.forgetPassLabel = tk.Label(self, text='Forgot password?', font='12', bg=bg_color)
-        self.forgetLoginLabel = tk.Label(self, text='Login:', bg=bg_color)
-        self.forgetLoginEntry = tk.Entry(self, width=25)
-        self.forgetEmailLabel = tk.Label(self, text='Email: ', bg=bg_color)
-        self.forgetEmailEntry = tk.Entry(self, width=25)
-        self.remindPasswordBtn = tk.Button(self, text='Remind Password', bg='white', command=self.remind_password)
+        self.titleLabel = tk.Label(self, text=title, font='12', bg=bg_color)
+
+        for i in range(0, len(entries)):
+            self.widgetsForEntries.append(tk.Label(self, text=entries[i] + ':', bg=bg_color))
+            self.widgetsForEntries.append((tk.Entry(self, width=25, show='*')))
+        self.ConfirmBtn = tk.Button(self, text='OK', bg='white', command=self.jobs[title])
 
         self.place_widgets()
+        AskValuesWindow.disable_buttons(self.btnsToDisable)
 
-        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, [self.btn]))
+        self.protocol('WM_DELETE_WINDOW', lambda: Window.close_top_level(self, self.btnsToDisable))
+
+    @classmethod
+    def disable_buttons(cls, buttons):
+        for button in buttons:
+            button.config(state='disabled')
 
     def place_widgets(self):
         self.canvas.pack()
-        self.forgetPassLabel.place(relx=0, rely=0)
-        self.forgetLoginLabel.place(relx=0.25, rely=0.2)
-        self.forgetLoginEntry.place(relx=0.25, rely=0.3)
-        self.forgetEmailLabel.place(relx=0.25, rely=0.4)
-        self.forgetEmailEntry.place(relx=0.25, rely=0.5)
-        self.remindPasswordBtn.place(relx=0.28, rely=0.7, relwidth=0.4)
+        self.titleLabel.place(relx=0, rely=0)
+
+        for i in range(0, len(self.widgetsForEntries)):
+            self.widgetsForEntries[i].place(relx=0.25, rely=0.1 * (i + 2))
+
+        self.ConfirmBtn.place(relx=0.28, rely=0.7, relwidth=0.4)
 
     def remind_password(self):
-        login = self.forgetLoginEntry.get()
-        email = self.forgetEmailEntry.get()
+        login = self.widgetsForEntries[1].get()
+        email = self.widgetsForEntries[3].get()
 
         if '' in (login, email):
             messagebox.showerror('Error', 'Please fill all entries.')
@@ -61,7 +74,61 @@ class ForgetFormWindow(tk.Toplevel):
         if MailManager.send_mail(email, msg_type='password_request', data=password):
             messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
                                                              'You will receive an email with your password.')
-        Window.close_top_level(self, [self.btn])
+        Window.close_top_level(self, self.btnsToDisable)
+
+    def export(self):
+        pin = self.widgetsForEntries[1].get()
+        password = self.widgetsForEntries[3].get()
+
+        if not (pin and password):
+            messagebox.showerror('Error', 'PIN and password are both required.')
+            Window.delete_entries([self.widgetsForEntries[1], self.widgetsForEntries[3]])
+            return
+
+        if pin == DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
+                and password == DbManager.get_column_value_where('Users', 'password', 'id', self.user['id']):
+            Window.close_top_level(self, self.btnsToDisable)
+
+            path = filedialog.askdirectory()
+            path += '/exported_accounts.txt'
+
+            accounts = DbManager.get_user_accounts(self.user['id'])
+
+            try:
+                with open(path, 'w') as file:
+                    for account in accounts:
+                        row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' + \
+                              account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
+                        file.write(row)
+                messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
+                                                     'passwords. Be cautious when granting access to this file. Deleting the file from '
+                                                     'widely accessible disk space is recommended. ')
+
+            except PermissionError:
+                pass
+        else:
+            messagebox.showerror('Error', 'PIN or password invalid.')
+            Window.delete_entries(self.widgetsForEntries[1], self.widgetsForEntries[3])
+
+    def reset_pin(self):
+        new_pin = self.widgetsForEntries[1].get()
+        pin_confirm = self.widgetsForEntries[3].get()
+
+        if not (new_pin and pin_confirm):
+            messagebox.showerror('Error', 'New PIN and PIN confirmation are both required.')
+            Window.delete_entries(self.widgetsForEntries[1], self.widgetsForEntries[3])
+            return
+
+        if new_pin != pin_confirm:
+            messagebox.showerror('Error', 'New PIN and PIN confirmation do not match.')
+            Window.delete_entries(self.widgetsForEntries[1], self.widgetsForEntries[3])
+            return
+
+        DbManager.update('Users', 'pin', new_pin, 'id', self.user['id'])
+        self.user['pin'] = new_pin
+        messagebox.showinfo('Success', 'Your new PIN has been successfully set.')
+
+        Window.close_top_level(self, self.btnsToDisable)
 
 
 class AccountFormWindow(tk.Toplevel):
@@ -272,3 +339,5 @@ class ChangeSecurityWindow(tk.Toplevel):
                                        'with anyone else.')
         self.master.user[self.mode] = new_security     # update user
         Window.close_top_level(self, self.master.toDisable)
+
+
