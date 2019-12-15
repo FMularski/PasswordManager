@@ -10,14 +10,15 @@ from dbmanager import DbManager
 
 import re
 import random
+from languagepack import lp
 
 
 class StartWindow(Window):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, language):
+        super().__init__(language)
 
         # log in widgets
-        self.logInLabel = tk.Label(self.root, text="Log In", font="12", bg=self.bg_color)
+        self.logInLabel = tk.Label(self.root, text=lp['English']['login_label'], font="12", bg=self.bg_color)
         self.logLabel = tk.Label(self.root, text="Login:", bg=self.bg_color)
         self.logEntry = tk.Entry(self.root, width=25)
         self.passwordLabel = tk.Label(self.root, text="Password:", bg=self.bg_color)
@@ -153,18 +154,18 @@ class StartWindow(Window):
         MailManager.send_mail(self.user['email'], 'alert', data=login)
         self.root.destroy()
 
-        main_window = MainWindow(self.user)
+        main_window = MainWindow(self.language, self.user)
         main_window.root.mainloop()
 
     def forgot_password(self):
         self.forgetBtn.config(state='disabled')
         forgot_from = AskValuesWindow(self.root, 'Forgot password?', ['Login', 'Email'], [self.logInBtn,
-                                      self.forgetBtn, self.regBtn], self.bg_color)
+                                      self.forgetBtn, self.regBtn], self.bg_color, self.language)
 
 
 class SettingsWindow(Window):
-    def __init__(self, user, main_window):
-        super().__init__()
+    def __init__(self, language, user, main_window):
+        super().__init__(language)
         self.user = user
         self.mainWindow = main_window
 
@@ -180,17 +181,17 @@ class SettingsWindow(Window):
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.user)
+        main_window = self.mainWindow.__init__(self.language, self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.root.destroy()
-            start_window = StartWindow()
+            start_window = StartWindow(self.language)
 
 
 class MainWindow(Window):
-    def __init__(self, user):
-        super().__init__()
+    def __init__(self, language, user):
+        super().__init__(language)
         self.user = user
         self.accountsRowsWidgets = []
         self.showButtons = []
@@ -237,7 +238,7 @@ class MainWindow(Window):
 
     def open_add_acc_form(self):
         self.disable_buttons()
-        form_window = AccountFormWindow(self, mode='Add')
+        form_window = AccountFormWindow(self, mode='Add', language=self.language)
 
     def delete_account(self, acc_id):
         if messagebox.askokcancel(title='Delete account', message='Are you sure you want to delete this account?'):
@@ -328,18 +329,19 @@ class MainWindow(Window):
         self.toDisable.append(self.addAccountBtn)
 
     def open_window_to_export(self):
-        exportSecurityCheckWindow = AskValuesWindow(self.root, 'Export data', ['PIN', 'Password'], self.user,
-                                                    self.toDisable + [self.exportBtn, self.settingBtn], self.bg_color)
+        export_security_check_window = AskValuesWindow(self.root, 'Export data', ['PIN', 'Password'], self.user,
+                                                       self.toDisable + [self.exportBtn, self.settingBtn],
+                                                       self.bg_color, self.language)
 
     def open_settings(self):
         self.root.destroy()
-        settings_window = SettingsWindow(self.user, self)
+        settings_window = SettingsWindow(self.language, self.user, self)
         settings_window.root.mainloop()
 
 
 class SettingsWindow(Window):
-    def __init__(self, user, main_window):
-        super().__init__()
+    def __init__(self, language, user, main_window):
+        super().__init__(language)
         self.user = user
         self.mainWindow = main_window
         self.toDisable = []
@@ -401,7 +403,6 @@ class SettingsWindow(Window):
 
     def change_security(self, mode):
         validation_code = random.randint(100000, 999999)
-        print(validation_code)
         MailManager.send_mail(self.user['email'], msg_type='security_change', data=validation_code, data2=mode)
 
         entered_code = simpledialog.askinteger(f'Change {mode}', 'A validation code has been sent to your email.\n'
@@ -411,7 +412,7 @@ class SettingsWindow(Window):
 
         if validation_code == entered_code:
             self.disable_buttons()
-            change_security_window = ChangeSecurityWindow(self, mode)
+            change_security_window = ChangeSecurityWindow(self, mode, self.language)
         else:
             messagebox.showerror('Error', 'Invalid validation code.')
 
@@ -428,14 +429,14 @@ class SettingsWindow(Window):
             return
 
         reset_pin_window = AskValuesWindow(self.root, 'Reset PIN', ['New PIN', 'Confirm new PIN'],
-                                           self.user, self.toDisable, self.bg_color)
+                                           self.user, self.toDisable, self.bg_color, self.language)
 
     def back_to_main(self):
         self.root.destroy()
-        main_window = self.mainWindow.__init__(self.user)
+        main_window = self.mainWindow.__init__(self.language, self.user)
 
     def log_out(self):
         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
             self.user = None
             self.root.destroy()
-            start_window = StartWindow()
+            start_window = StartWindow(self.language)

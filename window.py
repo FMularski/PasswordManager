@@ -3,7 +3,8 @@ import pyautogui as pag
 
 
 class Window:
-    def __init__(self):
+    def __init__(self, language):
+        self.language = language
         self.windowWidth, self.windowHeight = pag.size()
         self.user = None
 

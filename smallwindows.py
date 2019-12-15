@@ -12,8 +12,9 @@ import random
 
 
 class AskValuesWindow(tk.Toplevel):
-    def __init__(self, master, title, entries, user, btns_to_disable, bg_color):
+    def __init__(self, master, title, entries, user, btns_to_disable, bg_color, language):
         super().__init__(master)
+        self.language = language
         self.master = master
         self.width, self.height = pag.size()
         self.widgetsForEntries = []
@@ -132,8 +133,9 @@ class AskValuesWindow(tk.Toplevel):
 
 
 class AccountFormWindow(tk.Toplevel):
-    def __init__(self, master, mode):
+    def __init__(self, master, mode, language):
         super().__init__(master.root)
+        self.language = language
         self.user = master.user
         self.mode = mode
         self.toDisable = master.toDisable
@@ -274,8 +276,9 @@ class AccountFormWindow(tk.Toplevel):
 
 
 class ChangeSecurityWindow(tk.Toplevel):
-    def __init__(self, master, mode):
+    def __init__(self, master, mode, language):
         super().__init__()
+        self.language = language
         self.master = master
         self.user = master.user
         self.mode = mode
