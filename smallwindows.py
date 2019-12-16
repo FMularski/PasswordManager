@@ -8,7 +8,7 @@ from dbmanager import DbManager
 
 import pyautogui as pag
 import re
-import random
+from languagepack import lp
 
 
 class AskValuesWindow(tk.Toplevel):
@@ -22,7 +22,7 @@ class AskValuesWindow(tk.Toplevel):
         self.user = user
         self.jobs = {'Forgot password?': self.remind_password,
                      'Export data': self.export,
-                     'Reset PIN': self.reset_pin
+                     'Reset PIN': self.reset_pin,
                      }
 
         self.canvas = tk.Canvas(self, width=self.width / 5, height=self.height / 5, bg=bg_color)
@@ -30,8 +30,13 @@ class AskValuesWindow(tk.Toplevel):
 
         for i in range(0, len(entries)):
             self.widgetsForEntries.append(tk.Label(self, text=entries[i] + ':', bg=bg_color))
-            self.widgetsForEntries.append((tk.Entry(self, width=25, show='*')))
-        self.ConfirmBtn = tk.Button(self, text='OK', bg='white', command=self.jobs[title])
+
+            asterisk_entry = tk.Entry(self, width=25)
+            self.widgetsForEntries.append(asterisk_entry)
+            if lp[self.language][title] != 'Forgot password?':      # if it's password recovery don't hide entries
+                asterisk_entry['show'] = '*'                        # for login and email
+
+        self.ConfirmBtn = tk.Button(self, text='OK', bg='white', command=self.jobs[lp[self.language][title]])
 
         self.place_widgets()
         AskValuesWindow.disable_buttons(self.btnsToDisable)
@@ -57,24 +62,29 @@ class AskValuesWindow(tk.Toplevel):
         email = self.widgetsForEntries[3].get()
 
         if '' in (login, email):
-            messagebox.showerror('Error', 'Please fill all entries.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['fill_all_entries'])
+            return
+
+        if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['invalid_email'])
             return
 
         log_in_db = DbManager.get_column_values('Users', 'login')
 
         if login not in log_in_db:
-            messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['incorrect_login'].format(login=login))
             return
 
         if email != DbManager.get_column_value_where('Users', 'email', 'login', login):
-            messagebox.showerror('Error', f'Email \'{email}\' does not match the entered login.')
+            messagebox.showerror(lp[self.language]['error'],
+                                 lp[self.language]['email_doesnt_match'].format(email=email))
             return
 
         password = DbManager.get_column_value_where('Users', 'password', 'login', login)
 
-        if MailManager.send_mail(email, msg_type='password_request', data=password):
-            messagebox.showinfo('Password reminder request', 'Your request has been accepted. '
-                                                             'You will receive an email with your password.')
+        if MailManager.send_mail(self.language, email, msg_type='password_request', data=password, data2=login):
+            messagebox.showinfo(lp[self.language]['password_reminder_req'],
+                                lp[self.language]['password_reminder_accepted'])
         Window.close_top_level(self, self.btnsToDisable)
 
     def export(self):
@@ -82,8 +92,8 @@ class AskValuesWindow(tk.Toplevel):
         password = self.widgetsForEntries[3].get()
 
         if not (pin and password):
-            messagebox.showerror('Error', 'PIN and password are both required.')
-            Window.delete_entries([self.widgetsForEntries[1], self.widgetsForEntries[3]])
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['pin_and_password_req'])
+            Window.delete_entries(self.widgetsForEntries[1], self.widgetsForEntries[3])
             return
 
         if pin == DbManager.get_column_value_where('Users', 'pin', 'id', self.user['id']) \
@@ -101,14 +111,12 @@ class AskValuesWindow(tk.Toplevel):
                         row = 'title: ' + account['title'] + '\tlogin: ' + account['login'] + '\tassociated email: ' + \
                               account['associated_email'] + '\tpassword: ' + account['password'] + '\n'
                         file.write(row)
-                messagebox.showinfo('Data exported', 'Remember that the exported file contains all of your '
-                                                     'passwords. Be cautious when granting access to this file. Deleting the file from '
-                                                     'widely accessible disk space is recommended. ')
+                messagebox.showinfo(lp[self.language]['data_exported'], lp[self.language]['data_exported_info'])
 
             except PermissionError:
                 pass
         else:
-            messagebox.showerror('Error', 'PIN or password invalid.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['pin_or_password_invalid'])
             Window.delete_entries(self.widgetsForEntries[1], self.widgetsForEntries[3])
 
     def reset_pin(self):

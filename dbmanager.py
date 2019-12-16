@@ -62,8 +62,6 @@ class DbManager:
             messagebox.showerror('Error', e)
             return
 
-        messagebox.showinfo('Success', f'{table[0:-1]} {values[0]} has been successfully created.')
-
     @classmethod
     def update(cls, table, column, new_value, where_column, where_column_value):
         try:

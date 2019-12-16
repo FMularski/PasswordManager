@@ -17,27 +17,30 @@ class StartWindow(Window):
     def __init__(self, language):
         super().__init__(language)
         # log in widgets
-        self.logInLabel = tk.Label(self.root, text=lp[self.language]['login_label'], font="12", bg=self.bg_color)
-        self.logLabel = tk.Label(self.root, text="Login:", bg=self.bg_color)
+        self.logInLabel = tk.Label(self.root, text=lp[self.language]['SW_login_title'], font="12", bg=self.bg_color)
+        self.logLabel = tk.Label(self.root, text=lp[self.language]['SW_login_login_entry'], bg=self.bg_color)
         self.logEntry = tk.Entry(self.root, width=25)
-        self.passwordLabel = tk.Label(self.root, text="Password:", bg=self.bg_color)
+        self.passwordLabel = tk.Label(self.root, text=lp[self.language]['SW_login_password_entry'], bg=self.bg_color)
         self.passwordEntry = tk.Entry(self.root, width=25, show='*')
-        self.logInBtn = tk.Button(self.root, text="Log In", bg='white', command=self.login)
-        self.forgetBtn = tk.Button(self.root, text="Forgot password?", bg="white", command=self.forgot_password)
+        self.logInBtn = tk.Button(self.root, text=lp[self.language]['SW_login_login_btn'],
+                                  bg='white', command=self.login)
+        self.forgetBtn = tk.Button(self.root, text=lp[self.language]['SW_login_forgot_btn'],
+                                   bg="white", command=self.forgot_password)
 
         # registration widgets
-        self.regLabel = tk.Label(self.root, text="Registration", font="12", bg=self.bg_color)
-        self.regLogLabel = tk.Label(self.root, text="Login:", bg=self.bg_color)
+        self.regLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_title'], font="12", bg=self.bg_color)
+        self.regLogLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_login_entry'], bg=self.bg_color)
         self.regLogEntry = tk.Entry(self.root, width=25)
-        self.regPasswordLabel = tk.Label(self.root, text="Password:", bg=self.bg_color)
+        self.regPasswordLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_password_entry'], bg=self.bg_color)
         self.regPasswordEntry = tk.Entry(self.root, width=25, show='*')
-        self.regPasswordConfirmLabel = tk.Label(self.root, text="Confirm Password:", bg=self.bg_color)
+        self.regPasswordConfirmLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_password_confirm_entry'],
+                                                bg=self.bg_color)
         self.regPasswordConfirmEntry = tk.Entry(self.root, width=25, show='*')
-        self.regEmailLabel = tk.Label(self.root, text="Email:", bg=self.bg_color)
+        self.regEmailLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_email_entry'], bg=self.bg_color)
         self.regEmailEntry = tk.Entry(self.root, width=25)
-        self.regPinLabel = tk.Label(self.root, text="PIN:", bg=self.bg_color)
+        self.regPinLabel = tk.Label(self.root, text=lp[self.language]['SW_reg_pin_entry'], bg=self.bg_color)
         self.regPinEntry = tk.Entry(self.root, width=25, show='*')
-        self.regBtn = tk.Button(self.root, text="Register", bg='white', command=self.register)
+        self.regBtn = tk.Button(self.root, text=lp[self.language]['SW_reg_reg_btn'], bg='white', command=self.register)
 
         self.place_widgets()
         self.root.mainloop()
@@ -76,42 +79,42 @@ class StartWindow(Window):
         pin = self.regPinEntry.get()
 
         if '' in (login, password, password_confirm, email, pin):
-            messagebox.showerror('Error', 'Please fill all entries.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['fill_all_entries'])
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
             return
 
         login_in_db = DbManager.get_column_values('Users', 'login')
 
         if login in login_in_db:
-            messagebox.showerror('Error', f'Login \'{login}\' is already used.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['login_used'].format(login=login))
             Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
                                   self.regEmailEntry, self.regPinEntry)
             return
 
         if len(password) < 8:   # password minimum length
-            messagebox.showerror('Error', 'Password must be at least 8 characters long.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['min_8_chars'])
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry, self.regPinEntry)
             return
 
         if password != password_confirm:
-            messagebox.showerror('Error', 'Password and password confirmation don\'t match.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['confirm_dont_match'])
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
                                   self.regEmailEntry, self.regPinEntry)
             return
 
         if not re.match(r'[^@]+@[^@]+\.[^@]+', email):
-            messagebox.showerror('Error', 'Invalid email.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['invalid_email'])
             Window.delete_entries(self.regPasswordEntry, self.regPasswordConfirmEntry,
                                   self.regEmailEntry, self.regPinEntry)
             return
 
         verification_code = random.randint(100000, 999999)
-        MailManager.send_mail(email, msg_type='thanks', data=login, data2=verification_code)
-        entered_code = simpledialog.askinteger('Email verification', 'Please verify your email by '
-                                               'entering the code\nthat has been sent to your email address.')
+        MailManager.send_mail(self.language, email, msg_type='thanks', data=login, data2=verification_code)
+        entered_code = simpledialog.askinteger(lp[self.language]['email_verification'],
+                                               lp[self.language]['please_verify_email'])
 
         if entered_code != verification_code:
-            messagebox.showerror('Error', 'Invalid verification code.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['invalid_veri_code'])
             Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
                                   self.regEmailEntry, self.regPinEntry)
             return
@@ -120,25 +123,26 @@ class StartWindow(Window):
             DbManager.insert('Users', 'login, password, email, pin', (login, password, email, pin))
             Window.delete_entries(self.regLogEntry, self.regPasswordEntry, self.regPasswordConfirmEntry,
                                   self.regEmailEntry, self.regPinEntry)
+            messagebox.showinfo(lp[self.language]['success'], lp[self.language]['user_created'].format(user=login))
 
     def login(self):
         login = self.logEntry.get()
         password = self.passwordEntry.get()
 
         if '' in (login, password):
-            messagebox.showerror('Error', 'Please fill all entries.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['fill_all_entries'])
             Window.delete_entries(self.passwordEntry)
             return
 
         log_in_db = DbManager.get_column_values('Users', 'login')
 
         if login not in log_in_db:
-            messagebox.showerror('Error', f'Login \'{login}\' is not correct.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['incorrect_login'].format(login=login))
             Window.delete_entries(self.logEntry, self.passwordEntry)
             return
 
         if password != DbManager.get_column_value_where('Users', 'password', 'login', login):
-            messagebox.showerror('Error', 'Entered password is not correct.')
+            messagebox.showerror(lp[self.language]['error'], lp[self.language]['incorrect_password'])
             Window.delete_entries(self.passwordEntry)
             return
 
@@ -150,7 +154,7 @@ class StartWindow(Window):
             'pin': DbManager.get_column_value_where('Users', 'pin', 'login', login)
         }
 
-        MailManager.send_mail(self.user['email'], 'alert', data=login)
+        MailManager.send_mail(self.language, self.user['email'], msg_type='alert', data=login)
         self.root.destroy()
 
         main_window = MainWindow(self.language, self.user)
@@ -158,34 +162,9 @@ class StartWindow(Window):
 
     def forgot_password(self):
         self.forgetBtn.config(state='disabled')
-        forgot_from = AskValuesWindow(self.root, 'Forgot password?', ['Login', 'Email'], [self.logInBtn,
-                                      self.forgetBtn, self.regBtn], self.bg_color, self.language)
-
-
-# class SettingsWindow(Window):
-#     def __init__(self, language, user, main_window):
-#         super().__init__(language)
-#         self.user = user
-#         self.mainWindow = main_window
-#
-#         self.settingsLabel = tk.Label(self.root, text='Settings', bg=self.bg_color, font=10)
-#         self.backBtn = tk.Button(self.root, text='<< Back', bg='#dedcd1', command=self.back_to_main)
-#         self.logoutBtn = tk.Button(self.root, text='Log out', bg='pink', command=self.log_out)
-#         self.place_widgets()
-#
-#     def place_widgets(self):
-#         self.settingsLabel.place(relx=0, rely=0)
-#         self.backBtn.place(relx=0.9, rely=0.85)
-#         self.logoutBtn.place(relx=0, rely=0.05)
-#
-#     def back_to_main(self):
-#         self.root.destroy()
-#         main_window = self.mainWindow.__init__(self.language, self.user)
-#
-#     def log_out(self):
-#         if messagebox.askokcancel('Log out', 'Are you sure you want to log out?'):
-#             self.root.destroy()
-#             start_window = StartWindow(self.language)
+        forgot_from = AskValuesWindow(self.root, lp[self.language]['forgot_password_title'],
+                                      ['Login', 'Email'], self.user, [self.logInBtn, self.forgetBtn, self.regBtn],
+                                      self.bg_color, language=self.language)
 
 
 class MainWindow(Window):
@@ -205,15 +184,21 @@ class MainWindow(Window):
         self.deleteWidth = 0.9
 
         self.scrollframe = ScrollFrame(self.root)
-        self.userInfoLabel = tk.Label(self.root, text=f'Logged in as {user["login"]}', bg=self.bg_color)
-        self.titleLabel = tk.Label(self.scrollframe.viewPort, text='Title', bg=self.bg_color)
-        self.loginLabel = tk.Label(self.scrollframe.viewPort, text='Login', bg=self.bg_color)
-        self.associatedEmailLabel = tk.Label(self.scrollframe.viewPort, text='Associated Email', bg=self.bg_color)
-        self.passwordLabel = tk.Label(self.scrollframe.viewPort, text='Password', bg=self.bg_color)
+        self.userInfoLabel = tk.Label(self.root, text=lp[self.language]['logged_as'].format(login=self.user['login']),
+                                      bg=self.bg_color)
+        self.titleLabel = tk.Label(self.scrollframe.viewPort, text=lp[self.language]['acc_title'], bg=self.bg_color)
+        self.loginLabel = tk.Label(self.scrollframe.viewPort, text=lp[self.language]['acc_login'], bg=self.bg_color)
+        self.associatedEmailLabel = tk.Label(self.scrollframe.viewPort, text=lp[self.language]['acc_associated_email'],
+                                             bg=self.bg_color)
+        self.passwordLabel = tk.Label(self.scrollframe.viewPort, text=lp[self.language]['acc_password'],
+                                      bg=self.bg_color)
         self.separationLabel = tk.Label(self.scrollframe.viewPort, text=' ' * 40, bg=self.bg_color)
-        self.addAccountBtn = tk.Button(self.root, text='+ Add Account', bg='#6bfc03', command=self.open_add_acc_form)
-        self.settingBtn = tk.Button(self.root, text='Settings', bg='#dedcd1', command=self.open_settings)
-        self.exportBtn = tk.Button(self.root, text='Export as txt', bg='#dedcd1', command=self.open_window_to_export)
+        self.addAccountBtn = tk.Button(self.root, text=lp[self.language]['add_acc_btn'], bg='#6bfc03',
+                                       command=self.open_add_acc_form)
+        self.settingBtn = tk.Button(self.root, text=lp[self.language]['settings_btn'], bg='#dedcd1',
+                                    command=self.open_settings)
+        self.exportBtn = tk.Button(self.root, text=lp[self.language]['export_btn'], bg='#dedcd1',
+                                   command=self.open_window_to_export)
 
         self.place_widgets()
         self.display_accounts()
@@ -246,7 +231,7 @@ class MainWindow(Window):
 
     def edit_account(self, acc_id):
         self.disable_buttons()
-        form_window = AccountFormWindow(self, mode='Edit')
+        form_window = AccountFormWindow(self, mode='Edit', language=self.language)
         form_window.load_account_data(acc_id)
 
     def check_pin(self, pin, btn):
@@ -266,7 +251,7 @@ class MainWindow(Window):
         self.accountsRowsWidgets.append({'shown_password': password})
 
     def show_password(self, btn):
-        btn['btn']['text'] = 'Show'
+        btn['btn']['text'] = lp[self.language]['show']
         pin_entry = tk.Entry(self.scrollframe.viewPort, width=17, show='*')
         pin_entry.grid(row=btn['y'], column=4)
         # pin_entry.place(relx=btn['x'] + 0.05, rely=btn['y'])
@@ -300,20 +285,20 @@ class MainWindow(Window):
             associated_email.grid(row=i + 1, column=2)
 
             # SHOW BTN
-            show_btn = tk.Button(self.scrollframe.viewPort, text='Enter PIN to show', bg='white')
+            show_btn = tk.Button(self.scrollframe.viewPort, text=lp[self.language]['enter_pin_to_show'], bg='white')
             show_btn.grid(row=i + 1, column=3)
             self.showButtons.append({'btn': show_btn, 'y': i + 1, 'x': self.passwordWidth,
                                      'acc_id': accounts[i]['id']})
             self.showButtons[i]['btn']['command'] = lambda btn=self.showButtons[i]: self.show_password(btn)
 
             # EDIT BTN
-            edit_btn = tk.Button(self.scrollframe.viewPort, text='Edit', bg='white',
+            edit_btn = tk.Button(self.scrollframe.viewPort, text=lp[self.language]['edit'], bg='white',
                                  command=lambda index=i: self.edit_account(accounts[index]['id']))
             edit_btn.grid(row=i + 1, column=99)
             self.editButtons.append({'btn': edit_btn, 'x': self.editWidth, 'y': 0.05 * i})
 
             # DELETE BTN
-            delete_btn = tk.Button(self.scrollframe.viewPort, text='Delete', bg='red', fg='white',
+            delete_btn = tk.Button(self.scrollframe.viewPort, text=lp[self.language]['delete'], bg='red', fg='white',
                                    command=lambda index=i: self.delete_account(accounts[index]['id']))
             delete_btn.grid(row=i + 1, column=100)
 
@@ -328,7 +313,8 @@ class MainWindow(Window):
         self.toDisable.append(self.addAccountBtn)
 
     def open_window_to_export(self):
-        export_security_check_window = AskValuesWindow(self.root, 'Export data', ['PIN', 'Password'], self.user,
+        export_security_check_window = AskValuesWindow(self.root, lp[self.language]['Export data'],
+                                                       ['PIN', lp[self.language]['Password']], self.user,
                                                        self.toDisable + [self.exportBtn, self.settingBtn],
                                                        self.bg_color, self.language)
 
